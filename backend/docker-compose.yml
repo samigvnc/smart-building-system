@@ -1,0 +1,32 @@
+services:
+  # 1. PostgreSQL & TimescaleDB
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: smart_building_timescaledb
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: smart_building_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+
+  # 2. RabbitMQ Message Broker (Management UI dahil)
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: smart_building_rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"     # AMQP Protokolü (Backend, Spring Boot ve Streaming için)
+      - "15672:15672"   # RabbitMQ Web Yönetim Paneli (http://localhost:15672)
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  timescaledb_data:
+  rabbitmq_data:
