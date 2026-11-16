@@ -12,11 +12,27 @@ public class SmartStrategy implements EnergyManagementStrategy {
             new BuildingEnergyAllocator();
 
     public SmartStrategy() {
-        this(
-                25.0,
-                2.5,
-                3
-        );
+        this(SmartStrategyConfig.defaultConfig());
+    }
+
+    public SmartStrategy(
+            SmartStrategyConfig config
+    ) {
+
+        if (config == null) {
+            throw new IllegalArgumentException(
+                    "Smart strategy config cannot be null."
+            );
+        }
+
+        this.minimumReservePercent =
+                config.minimumReservePercent();
+
+        this.highPriceThreshold =
+                config.highPriceThreshold();
+
+        this.outageLookAheadHours =
+                config.outageLookAheadHours();
     }
 
     public SmartStrategy(
@@ -24,34 +40,13 @@ public class SmartStrategy implements EnergyManagementStrategy {
             double highPriceThreshold,
             int outageLookAheadHours
     ) {
-
-        if (minimumReservePercent < 0
-                || minimumReservePercent > 100) {
-            throw new IllegalArgumentException(
-                    "Minimum reserve must be between 0 and 100."
-            );
-        }
-
-        if (highPriceThreshold < 0) {
-            throw new IllegalArgumentException(
-                    "High price threshold cannot be negative."
-            );
-        }
-
-        if (outageLookAheadHours < 0) {
-            throw new IllegalArgumentException(
-                    "Outage look-ahead cannot be negative."
-            );
-        }
-
-        this.minimumReservePercent =
-                minimumReservePercent;
-
-        this.highPriceThreshold =
-                highPriceThreshold;
-
-        this.outageLookAheadHours =
-                outageLookAheadHours;
+        this(
+                new SmartStrategyConfig(
+                        minimumReservePercent,
+                        highPriceThreshold,
+                        outageLookAheadHours
+                )
+        );
     }
 
     @Override

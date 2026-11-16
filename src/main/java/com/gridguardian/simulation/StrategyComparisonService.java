@@ -18,6 +18,22 @@ public class StrategyComparisonService {
             double batteryCapacityKwh,
             double initialBatterySocKwh
     ) {
+        return compare(
+                inputs,
+                conditions,
+                batteryCapacityKwh,
+                initialBatterySocKwh,
+                SmartStrategyConfig.defaultConfig()
+        );
+    }
+
+    public StrategyComparisonResult compare(
+            List<HourlyInput> inputs,
+            List<ScenarioCondition> conditions,
+            double batteryCapacityKwh,
+            double initialBatterySocKwh,
+            SmartStrategyConfig smartStrategyConfig
+    ) {
 
         Battery basicBattery =
                 new Battery(
@@ -35,7 +51,9 @@ public class StrategyComparisonService {
                 new BasicStrategy();
 
         SmartStrategy smartStrategy =
-                new SmartStrategy();
+                new SmartStrategy(
+                        smartStrategyConfig
+                );
 
         List<HourlyResult> basicResults =
                 simulationEngine.run(

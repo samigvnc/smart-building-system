@@ -25,15 +25,23 @@ public class Main {
                         )
                 );
 
+                SmartStrategyConfig smartConfig =
+                new SmartStrategyConfig(
+                        25.0,
+                        2.5,
+                        3
+                );
+        
         StrategyComparisonService comparisonService =
                 new StrategyComparisonService();
-
+        
         StrategyComparisonResult comparison =
                 comparisonService.compare(
                         inputs,
                         conditions,
                         100.0,
-                        50.0
+                        50.0,
+                        smartConfig
                 );
 
         printSummary(
