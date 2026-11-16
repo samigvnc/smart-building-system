@@ -53,25 +53,13 @@ public class Main {
                         cafeteria
                 );
 
-        HourlyProfile solarProfile =
-                loader.loadFromResource(
-                        "data/solar.csv"
+        SimulationInputProvider inputProvider =
+                new CsvSimulationInputProvider(
+                        buildings
                 );
-
-        HourlyProfile priceProfile =
-                loader.loadFromResource(
-                        "data/price.csv"
-                );
-
-        HourlyInputFactory factory =
-                new HourlyInputFactory();
 
         List<HourlyInput> inputs =
-                factory.create(
-                        buildings,
-                        solarProfile,
-                        priceProfile
-                );
+                inputProvider.loadInputs();
 
         List<ScenarioCondition> conditions =
                 List.of(
