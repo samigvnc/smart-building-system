@@ -1,61 +1,17 @@
 package com.gridguardian.simulation;
 
 import java.util.List;
+import java.util.Set;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception {
-
-        CsvHourlyProfileLoader loader =
-                new CsvHourlyProfileLoader();
-
-        Building dormitory =
-                new Building(
-                        BuildingType.DORMITORY,
-                        false,
-                        loader.loadFromResource(
-                                "data/dev/dormitory.csv"
-                        )
-                );
-
-        Building library =
-                new Building(
-                        BuildingType.LIBRARY,
-                        false,
-                        loader.loadFromResource(
-                                "data/dev/library.csv"
-                        )
-                );
-
-        Building laboratory =
-                new Building(
-                        BuildingType.LABORATORY,
-                        true,
-                        loader.loadFromResource(
-                                "data/dev/laboratory.csv"
-                        )
-                );
-
-        Building cafeteria =
-                new Building(
-                        BuildingType.CAFETERIA,
-                        false,
-                        loader.loadFromResource(
-                                "data/dev/cafeteria.csv"
-                        )
-                );
-
-        List<Building> buildings =
-                List.of(
-                        dormitory,
-                        library,
-                        laboratory,
-                        cafeteria
-                );
+    public static void main(String[] args) {
 
         SimulationInputProvider inputProvider =
                 new CsvSimulationInputProvider(
-                        buildings
+                        Set.of(
+                                BuildingType.LABORATORY
+                        )
                 );
 
         List<HourlyInput> inputs =
