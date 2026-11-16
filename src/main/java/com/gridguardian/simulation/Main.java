@@ -4,64 +4,53 @@ import java.util.List;
 import java.util.Set;
 
 public class Main {
-        public static void main(String[] args) {
 
-                SimulationRequest request =
-                        new SimulationRequest(
-                                100.0,
-                                50.0,
-                                Set.of(
-                                        BuildingType.LABORATORY
-                                ),
-                                List.of(
-                                        ScenarioCondition.gridOutage(
-                                                18,
-                                                20
-                                        )
-                                ),
-                                new SmartStrategyConfig(
-                                        25.0,
-                                        2.5,
-                                        3
+    public static void main(String[] args) {
+
+        SimulationRequest request =
+                new SimulationRequest(
+                        100.0,
+                        50.0,
+                        Set.of(
+                                BuildingType.LABORATORY
+                        ),
+                        List.of(
+                                ScenarioCondition.gridOutage(
+                                        18,
+                                        20
                                 )
-                        );
-            
-                SimulationInputProvider inputProvider =
-                        new CsvSimulationInputProvider(
-                                request.criticalBuildings()
-                        );
-            
-                List<HourlyInput> inputs =
-                        inputProvider.loadInputs();
-            
-                StrategyComparisonService comparisonService =
-                        new StrategyComparisonService();
-            
-                StrategyComparisonResult comparison =
-                        comparisonService.compare(
-                                inputs,
-                                request.scenarioConditions(),
-                                request.batteryCapacityKwh(),
-                                request.initialBatterySocKwh(),
-                                request.smartStrategyConfig()
-                        );
-            
-                printSummary(
-                        comparison.basic().summary()
+                        ),
+                        new SmartStrategyConfig(
+                                25.0,
+                                2.5,
+                                3
+                        )
                 );
-            
-                System.out.println();
-            
-                printSummary(
-                        comparison.smart().summary()
+
+        SimulationService simulationService =
+                new SimulationService();
+
+        StrategyComparisonResult comparison =
+                simulationService.run(
+                        request
                 );
-            
-                System.out.println();
-            
-                printHourlyComparison(
-                        comparison
-                );
-            }
+
+        printSummary(
+                comparison.basic().summary()
+        );
+
+        System.out.println();
+
+        printSummary(
+                comparison.smart().summary()
+        );
+
+        System.out.println();
+
+        printHourlyComparison(
+                comparison
+        );
+    }
 
     private static void printSummary(
             SimulationSummary summary
