@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[GRIDGUARDIAN]</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-main: #1a1e16;
+            --grid-line: rgba(45, 53, 37, 0.4);
+            --bg-header: #121510;
+            --bg-box: rgba(22, 26, 19, 0.92);
+            --bg-inset: #0d100b;
+            --border-main: #4a5438;
+            --border-header: #3c442e;
+            --shadow-color: #0d100b;
+            --text-primary: #ffffff;
+            --text-secondary: #c2cbaf;
+            --text-muted: #7a8563;
+            --accent: #f59e0b;
+            --accent-text: #000000;
+        }
+
+        body.light-mode {
+            --bg-main: #e8ebe0;
+            --grid-line: rgba(110, 122, 88, 0.25);
+            --bg-header: #d8ddd0;
+            --bg-box: rgba(247, 248, 243, 0.95);
+            --bg-inset: #dfe3d5;
+            --border-main: #5c6647;
+            --border-header: #8a9673;
+            --shadow-color: #9aa389;
+            --text-primary: #141710;
+            --text-secondary: #2c3322;
+            --text-muted: #525c40;
+            --accent: #d97706;
+            --accent-text: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text-secondary);
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .reanimation-header { background-color: var(--bg-header); border-color: var(--border-header); }
+        .reanimation-box {
+            background-color: var(--bg-box);
+            border: 2px solid var(--border-main);
+            box-shadow: 4px 4px 0px 0px var(--shadow-color);
+            position: relative;
+        }
+        .reanimation-box::before {
+            content: ''; position: absolute; top: -4px; left: -4px; width: 8px; height: 8px; background-color: var(--accent);
+        }
+        .reanimation-inset { background-color: var(--bg-inset); border-color: var(--border-header); color: var(--text-primary); }
+        .text-theme-primary { color: var(--text-primary); }
+        .text-theme-secondary { color: var(--text-secondary); }
+        .text-theme-muted { color: var(--text-muted); }
+        .text-theme-accent { color: var(--accent); }
+        .bg-theme-accent { background-color: var(--accent); color: var(--accent-text); }
+        .bracket-head::before { content: '['; color: var(--accent); font-weight: bold; }
+        .bracket-head::after { content: ']'; color: var(--accent); font-weight: bold; }
+    </style>
+</head>
+<body class="font-mono antialiased min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
+
+<!-- Header / Tactical Banner -->
+<header class="reanimation-header border-b-4 px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+    <div class="flex items-center space-x-3">
+        <div id="healthIndicator" class="h-4 w-4 bg-red-500 border border-black animate-pulse" title="Backend Bağlantı Durumu"></div>
+        <h1 class="text-2xl font-black tracking-widest text-theme-accent uppercase">
+            <span class="bracket-head">GRIDGUARDIAN</span>
+        </h1>
+        <span class="text-xs reanimation-inset px-2 py-0.5 border font-bold">SYS//BACKEND_LINK</span>
+    </div>
+
+    <!-- Stencil Navigation -->
+    <nav class="flex flex-wrap justify-center gap-1 reanimation-inset p-1.5 border">
+        <button onclick="switchTab('telemetry')" id="btn-telemetry" class="tab-btn px-4 py-1.5 text-xs font-black uppercase transition bg-amber-500 text-black shadow">[1: TELEMETRY]</button>
+        <button onclick="switchTab('subsystems')" id="btn-subsystems" class="tab-btn px-4 py-1.5 text-xs font-black uppercase transition text-theme-muted hover:opacity-80">[2: 4-BUILDINGS]</button>
+        <button onclick="switchTab('parameters')" id="btn-parameters" class="tab-btn px-4 py-1.5 text-xs font-black uppercase transition text-theme-muted hover:opacity-80">[3: SCENARIOS]</button>
+        <button onclick="switchTab('logs')" id="btn-logs" class="tab-btn px-4 py-1.5 text-xs font-black uppercase transition text-theme-muted hover:opacity-80">[4: ROUTING_LOGS]</button>
+    </nav>
+
+    <div class="flex items-center space-x-3">
+        <div class="text-xs font-bold text-theme-accent tracking-wider">
+            API_STATUS: <span id="systemStatusBadge" class="text-theme-primary reanimation-inset px-2 py-0.5 border">CHECKING...</span>
+        </div>
+        <button onclick="toggleTheme()" id="themeToggleBtn" class="px-3 py-1.5 text-xs font-black uppercase border-2 border-amber-500 bg-amber-500/10 text-theme-accent hover:bg-amber-500 hover:text-black transition">[LIGHT_MODE]</button>
+    </div>
+</header>
+
+<!-- Main Content Grid -->
+<main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+
+    <!-- TAB 1: TELEMETRY -->
+    <section id="tab-telemetry" class="tab-content space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="reanimation-box p-5">
+                <h3 class="text-theme-muted text-xs font-bold uppercase tracking-widest">// NET_LOAD_DEMAND</h3>
+                <p class="text-3xl font-black text-theme-primary mt-2"><span id="loadDisplay">--</span> <span class="text-sm font-normal text-theme-accent">kW</span></p>
+                <span id="loadSubtext" class="text-[10px] text-theme-accent mt-1 block uppercase font-bold">API WAITING...</span>
+            </div>
+            <div class="reanimation-box p-5">
+                <h3 class="text-theme-muted text-xs font-bold uppercase tracking-widest">// STORAGE_RESERVE</h3>
+                <p class="text-3xl font-black text-theme-primary mt-2"><span id="batteryDisplay">--</span>%</p>
+                <span id="batterySubtext" class="text-[10px] text-theme-secondary mt-1 block uppercase">BATTERY LEVEL</span>
+            </div>
+            <div class="reanimation-box p-5">
+                <h3 class="text-theme-muted text-xs font-bold uppercase tracking-widest">// ROUTING_STRATEGY</h3>
+                <p id="algorithmBadge" class="text-3xl font-black text-theme-accent mt-2">BASIC / SMART</p>
+                <span id="algorithmSubtext" class="text-[10px] text-theme-muted mt-1 block uppercase font-bold">BACKEND DRIVEN</span>
+            </div>
+        </div>
+
+        <!-- Graph Area -->
+        <div class="reanimation-box p-6">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-500/30 pb-3">
+                <h2 class="text-sm font-black text-theme-accent uppercase tracking-widest">
+                    <span class="bracket-head">BACKEND_SIMULATION_FEED</span>
+                </h2>
+                <button onclick="executeBackendSimulation()" class="bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-black font-black text-xs uppercase px-4 py-2 border border-black shadow transition tracking-wider">
+                    POST /api/energy/simulate-step
+                </button>
+            </div>
+            <div class="h-80 w-full relative">
+                <canvas id="telemetryChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 2: 4 BUILDINGS -->
+    <section id="tab-subsystems" class="tab-content hidden space-y-6">
+        <h2 class="text-sm font-black text-amber-500 uppercase tracking-widest">// ZONE_DIAGNOSTICS (FROM BACKEND)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="buildingsContainer">
+            <!-- Dinamik olarak doldurulacak -->
+            <div class="reanimation-box p-6">
+                <h3 class="font-black text-theme-primary uppercase">Veriler Bekleniyor...</h3>
+                <p class="text-xs text-theme-secondary mt-2">Lütfen simülasyon adımı çalıştırın.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 3: SCENARIOS -->
+    <section id="tab-parameters" class="tab-content hidden space-y-6">
+        <h2 class="text-sm font-black text-amber-500 uppercase tracking-widest">// BACKEND_SCENARIO_PAYLOAD_CONFIG</h2>
+        <div class="reanimation-box p-6 max-w-2xl space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">SELECT_STRATEGY</label>
+                <select id="strategySelect" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
+                    <option value="BASIC">BASIC (Güneş Fazlası & Batarya Şarj)</option>
+                    <option value="SMART" selected>SMART (Öncelikli Yük Atma / Fiyat Arbitrajı)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">GRID AVAILABILITY</label>
+                <select id="gridAvailableSelect" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
+                    <option value="true">Şebeke Aktif (Normal Çalışma)</option>
+                    <option value="false">Şebeke Kesik (Islanding / Ada Modu)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">SOLAR GENERATION (kWh)</label>
+                <input type="number" id="solarInput" value="85.0" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">GRID ELECTRICITY PRICE ($/kWh)</label>
+                <input type="number" step="0.01" id="priceInput" value="0.18" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
+            </div>
+            <button onclick="executeBackendSimulation()" class="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase px-4 py-2 border border-black transition tracking-wider">
+                SEND TO /api/energy/simulate-step
+            </button>
+        </div>
+    </section>
+
+    <!-- TAB 4: ROUTING LOGS -->
+    <section id="tab-logs" class="tab-content hidden space-y-6">
+        <div class="flex justify-between items-center">
+            <h2 class="text-sm font-black text-amber-500 uppercase tracking-widest">// BACKEND_AUDIT_LOGS</h2>
+            <button onclick="document.getElementById('logConsole').innerHTML = ''" class="text-[10px] reanimation-inset text-theme-secondary px-3 py-1.5 border uppercase font-bold hover:opacity-80">CLEAR_LOG_BUFFER</button>
+        </div>
+        <div id="logConsole" class="reanimation-box p-4 space-y-2 text-xs max-h-96 overflow-y-auto">
+            <div class="p-2 reanimation-inset border text-theme-muted">
+                <span class="text-theme-accent font-bold">[INIT]</span> Frontend initialized. Connecting to backend at http://localhost:5000...
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="reanimation-header border-t-4 text-center py-4 text-[10px] text-theme-muted uppercase tracking-widest font-bold">
+    GRIDGUARDIAN ENERGY MESH // BACKEND INTEGRATED &copy; 2026
+</footer>
+
+<!-- Interactive Scripts & Backend Integration -->
+<script>
+    const API_BASE = "http://localhost:5000";
+    let isLightMode = false;
+
+    // Sayfa açıldığında Health Check yap
+    window.addEventListener("DOMContentLoaded", () => {
+        checkBackendHealth();
+    });
+
+    async function checkBackendHealth() {
+        try {
+            const res = await fetch(`${API_BASE}/api/health`);
+            if (res.ok) {
+                document.getElementById('healthIndicator').className = "h-4 w-4 bg-emerald-500 border border-black";
+                document.getElementById('systemStatusBadge').innerText = "ONLINE_CONNECTED";
+                appendLog("SUCCESS", "Connected to backend successfully via /api/health");
+            } else {
+                throw new Error("Bad response");
+            }
+        } catch (err) {
+            document.getElementById('healthIndicator').className = "h-4 w-4 bg-red-500 border border-black animate-pulse";
+            document.getElementById('systemStatusBadge').innerText = "OFFLINE_STANDALONE";
+            appendLog("ERROR", "Could not connect to backend at " + API_BASE + ". Make sure backend is running.");
+        }
+    }
+
+    async function executeBackendSimulation() {
+        const strategy = document.getElementById('strategySelect').value;
+        const isGridAvailable = document.getElementById('gridAvailableSelect').value === "true";
+        const solarGenerationKWh = parseFloat(document.getElementById('solarInput').value);
+        const gridElectricityPrice = parseFloat(document.getElementById('priceInput').value);
+
+        const payload = {
+            strategy: strategy,
+            environment: {
+                timestamp: new Date().toISOString(),
+                solarGenerationKWh: solarGenerationKWh,
+                isGridAvailable: isGridAvailable,
+                gridElectricityPrice: gridElectricityPrice,
+                priceThresholdCheap: 0.15,
+                battery: {
+                    currentCapacityKWh: 30.0,
+                    maxCapacityKWh: 100.0,
+                    minReservePercent: 20
+                },
+                buildings: [
+                    { id: "b1", name: "Biyoteknoloji Laboratuvarı", type: "LABORATORY", isCritical: true, demandKWh: 25 },
+                    { id: "b2", name: "Merkez Kütüphane", type: "LIBRARY", isCritical: true, demandKWh: 15 },
+                    { id: "b3", name: "Öğrenci Yurdu A Blok", type: "DORMITORY", isCritical: false, demandKWh: 30 }
+                ]
+            }
+        };
+
+        appendLog("INFO", `Sending POST request to /api/energy/simulate-step [Strategy: ${strategy}]...`);
+
+        try {
+            const response = await fetch(`${API_BASE}/api/energy/simulate-step`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error("Backend simulation error status: " + response.status);
+
+            const data = await response.json();
+            appendLog("SUCCESS", "Simulation step executed successfully from backend response.");
+
+            // Gelen gerçek verileri arayüze ve grafiğe yansıt
+            updateUIFromBackend(data, strategy, solarGenerationKWh);
+
+        } catch (err) {
+            appendLog("ERROR", "API request failed: " + err.message + ". Check if backend CORS or server is active.");
+        }
+    }
+
+    function updateUIFromBackend(data, strategy, solar) {
+        // Örnek veri işleme (backend'in döneceği yapıya göre esnektir)
+        const totalLoad = data.totalDemandKWh || (solar * 0.8) || 75.5;
+        const batteryLevel = data.batterySocPercent || 74.5;
+
+        document.getElementById('loadDisplay').innerText = totalLoad.toFixed(1);
+        document.getElementById('batteryDisplay').innerText = batteryLevel.toFixed(1);
+        document.getElementById('algorithmBadge').innerText = strategy;
+        document.getElementById('systemStatusBadge').innerText = "SYNCED_OK";
+
+        // Grafiğe yeni veri ekle
+        const timeLabel = new Date().toTimeString().split(' ')[0];
+        if (telemetryChart.data.labels.length >= 8) {
+            telemetryChart.data.labels.shift();
+            telemetryChart.data.datasets[0].data.shift();
+        }
+        telemetryChart.data.labels.push(timeLabel);
+        telemetryChart.data.datasets[0].data.push(totalLoad);
+        telemetryChart.update();
+
+        // 4 Bina / Bölge sekmesini güncelle
+        const container = document.getElementById('buildingsContainer');
+        container.innerHTML = "";
+
+        const buildings = data.buildings || [
+            { name: "Biyoteknoloji Laboratuvarı", isCritical: true, demandKWh: 25, status: "POWERED" },
+            { name: "Merkez Kütüphane", isCritical: true, demandKWh: 15, status: "POWERED" },
+            { name: "Öğrenci Yurdu A Blok", isCritical: false, demandKWh: 30, status: "SHEDDED/OPTIMIZED" }
+        ];
+
+        buildings.forEach(b => {
+            container.innerHTML += `
+                <div class="reanimation-box p-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-black text-theme-primary uppercase">${b.name}</h3>
+                        <span class="px-2 py-0.5 text-[10px] bg-amber-500 text-black font-bold uppercase">${b.status || (b.isCritical ? 'CRITICAL' : 'FLEXIBLE')}</span>
+                    </div>
+                    <p class="text-xs text-theme-secondary mt-2">DEMAND: ${b.demandKWh || 20} kW | TYPE: ${b.type || 'ZONE'}</p>
+                </div>
+            `;
+        });
+
+        switchTab('telemetry');
+    }
+
+    function appendLog(type, text) {
+        const logConsole = document.getElementById('logConsole');
+        const time = new Date().toTimeString().split(' ')[0];
+        let colorClass = "text-theme-muted";
+        if(type === "SUCCESS") colorClass = "text-theme-accent font-bold";
+        if(type === "ERROR") colorClass = "text-red-500 font-bold";
+
+        logConsole.innerHTML += `<div class="p-2 reanimation-inset border ${colorClass}">
+            <span>[${time}] [${type}]</span> ${text}
+        </div>`;
+        logConsole.scrollTop = logConsole.scrollHeight;
+    }
+
+    function toggleTheme() {
+        isLightMode = !isLightMode;
+        document.body.classList.toggle('light-mode', isLightMode);
+        document.getElementById('themeToggleBtn').innerText = isLightMode ? '[DARK_MODE]' : '[LIGHT_MODE]';
+
+        const gridColor = isLightMode ? 'rgba(92, 102, 71, 0.25)' : 'rgba(74, 84, 56, 0.4)';
+        const tickColor = isLightMode ? '#525c40' : '#7a8563';
+        const lineColor = isLightMode ? '#d97706' : '#f59e0b';
+
+        telemetryChart.options.scales.x.grid.color = gridColor;
+        telemetryChart.options.scales.y.grid.color = gridColor;
+        telemetryChart.options.scales.x.ticks.color = tickColor;
+        telemetryChart.options.scales.y.ticks.color = tickColor;
+        telemetryChart.data.datasets[0].borderColor = lineColor;
+        telemetryChart.data.datasets[0].pointBackgroundColor = lineColor;
+        telemetryChart.update();
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('bg-amber-500', 'text-black', 'shadow');
+            btn.classList.add('text-theme-muted', 'hover:opacity-80');
+        });
+
+        const activeBtn = document.getElementById('btn-' + tabId);
+        activeBtn.classList.add('bg-amber-500', 'text-black', 'shadow');
+        activeBtn.classList.remove('text-theme-muted', 'hover:opacity-80');
+
+        if(tabId === 'telemetry' && window.telemetryChart) {
+            window.telemetryChart.resize();
+        }
+    }
+
+    const ctx = document.getElementById('telemetryChart').getContext('2d');
+    const telemetryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['12:00', '12:05', '12:10', '12:15', '12:20'],
+            datasets: [{
+                label: 'Grid Load (kW)',
+                data: [72.1, 76.5, 74.2, 82.8, 78.4],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.1,
+                pointRadius: 5,
+                pointBackgroundColor: '#f59e0b',
+                pointBorderColor: '#000000'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { grid: { color: 'rgba(74, 84, 56, 0.4)' }, ticks: { color: '#7a8563', font: { family: 'monospace', size: 10 } } },
+                y: { min: 0, max: 150, grid: { color: 'rgba(74, 84, 56, 0.4)' }, ticks: { color: '#7a8563', font: { family: 'monospace', size: 10 } } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+    window.telemetryChart = telemetryChart;
+</script>
+</body>
+</html>
