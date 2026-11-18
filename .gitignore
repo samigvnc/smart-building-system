@@ -147,3 +147,13 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Java / Maven
+target/
+*.class
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
