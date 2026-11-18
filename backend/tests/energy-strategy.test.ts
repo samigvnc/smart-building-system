@@ -125,5 +125,28 @@ describe('EnergyStrategyService - İş Mantığı ve Karar Mekanizması Testleri
     assert.strictEqual(dormAlloc?.allocatedKWh, 0, 'Yurt (Dormitory) enerjisi kesilmeli (Load Shedded)');
     assert.strictEqual(dormAlloc?.isShedded, true, 'Yurt isShedded=true olarak işaretlenmeli');
   });
-});
 
+  it('Smart Strategy: kritik bina yapılandırılabilir; kritik olmayan Lab/Library de kesilebilir, yemekhane dahil 4 bina', () => {
+    const buildings = [
+      { id: 'c1', name: 'Yemekhane', type: BuildingType.CAFETERIA, isCritical: false, demandKWh: 10 },
+      { id: 'l1', name: 'Laboratuvar', type: BuildingType.LABORATORY, isCritical: true, demandKWh: 20 },
+      { id: 'k1', name: 'Kütüphane', type: BuildingType.LIBRARY, isCritical: false, demandKWh: 15 },
+      { id: 'd1', name: 'Yurt', type: BuildingType.DORMITORY, isCritical: false, demandKWh: 25 },
+    ]; // Toplam 70 kWh; yalnızca laboratuvar kritik
+
+    const result = strategyService.executeSmartStrategy({
+      timestamp: new Date().toISOString(),
+      solarGenerationKWh: 25, // 25 kWh güneş + 0 batarya
+      buildings,
+      battery: { currentCapacityKWh: 0, maxCapacityKWh: 100, minReservePercent: 25 },
+      isGridAvailable: false,
+      gridElectricityPrice: 1,
+    });
+
+    const alloc = (type: BuildingType) => result.allocations.find((a) => a.type === type)!;
+    assert.strictEqual(alloc(BuildingType.LABORATORY).allocatedKWh, 20, 'Kritik bina önce beslenmeli');
+    assert.strictEqual(alloc(BuildingType.CAFETERIA).allocatedKWh, 5, 'Kalan 5 kWh sıradaki binaya gider');
+    assert.strictEqual(alloc(BuildingType.LIBRARY).allocatedKWh, 0);
+    assert.strictEqual(alloc(BuildingType.DORMITORY).isShedded, true);
+  });
+});

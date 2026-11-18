@@ -57,7 +57,7 @@ async function bootstrap() {
     console.log(`====================================================`);
     console.log(`🚀 Smart Building System Backend: http://localhost:${ENV.PORT}`);
     console.log(`📊 Health Check: http://localhost:${ENV.PORT}/api/health`);
-    console.log(`⚡ Scenario Simulator: POST http://localhost:${ENV.PORT}/api/energy/run-scenario`);
+    console.log(`⚡ Simulation (Core Engine): POST http://localhost:${ENV.PORT}/api/simulation/run`);
     console.log(`====================================================`);
   });
 

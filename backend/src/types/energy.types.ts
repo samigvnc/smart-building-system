@@ -2,6 +2,7 @@ export enum BuildingType {
   LABORATORY = 'LABORATORY',
   LIBRARY = 'LIBRARY',
   DORMITORY = 'DORMITORY',
+  CAFETERIA = 'CAFETERIA',
 }
 
 export interface BuildingDemand {
@@ -15,7 +16,7 @@ export interface BuildingDemand {
 export interface BatteryState {
   currentCapacityKWh: number;
   maxCapacityKWh: number;
-  minReservePercent: number; // Varsayılan: %20
+  minReservePercent: number; // Varsayılan: %25 (Core Engine ile ortak)
   chargeEfficiency?: number;
   dischargeEfficiency?: number;
 }
@@ -26,8 +27,8 @@ export interface EnergyEnvironmentInput {
   buildings: BuildingDemand[];
   battery: BatteryState;
   isGridAvailable: boolean; // Şebeke kesintisi kontrolü
-  gridElectricityPrice: number; // $/kWh veya TL/kWh
-  priceThresholdCheap?: number; // Fiyat arbitrajı eşik değeri (örn: 0.15 $/kWh)
+  gridElectricityPrice: number; // Para birimi/kWh (veri setindeki birimle aynı)
+  priceThresholdCheap?: number; // Canlı karar için ucuz fiyat eşiği (arbitraj)
 }
 
 export interface BuildingEnergyAllocation {
@@ -54,4 +55,3 @@ export interface StrategyDecisionResult {
   allocations: BuildingEnergyAllocation[];
   notes: string[];
 }
-

@@ -8,7 +8,9 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "test": "tsx --test \"tests/**/*.test.ts\"",
-    "mock:stream": "tsx scripts/mock-streaming-producer.ts"
+    "mock:stream": "tsx scripts/mock-streaming-producer.ts",
+    "seed:dev": "tsx scripts/import-data.ts seed-dev",
+    "import:data": "tsx scripts/import-data.ts"
   },
   "dependencies": {
     "amqplib": "^0.10.4",

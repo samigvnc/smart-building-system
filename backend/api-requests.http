@@ -87,31 +87,50 @@ Content-Type: application/json
 
 ###
 
-### 5. 24-Saatlik Senaryo Simülatörü ve Basic vs Smart Kıyaslama Raporu
-POST http://localhost:5000/api/energy/run-scenario
+### 5. Ortak varsayılanlar (kritik bina, %25 rezerv, eşikler)
+GET http://localhost:5000/api/simulation/defaults
+
+###
+
+### 6. DB'den hazırlanan 24 saatlik Core Engine girdisi (önizleme)
+# Önce veri yükleyin: npm run seed:dev
+GET http://localhost:5000/api/simulation/inputs?source=dev&criticalBuildings=LABORATORY,LIBRARY
+
+###
+
+### 7. Core Engine'de Basic vs Smart simülasyonu (Java servisi core_engine_queue'yu dinlemelidir)
+POST http://localhost:5000/api/simulation/run
 Content-Type: application/json
 
 {
-  "scenarioName": "24-Saatlik Gerçek Zamanlı Kampüs Simülasyonu",
-  "durationHours": 24,
-  "gridOutageStartHour": 14,
-  "gridOutageDurationHours": 4,
-  "cloudyDayFactor": 0.85,
-  "batteryCapacityKWh": 150,
-  "initialBatteryKWh": 50,
-  "priceModel": "TIME_OF_USE",
-  "saveToDatabase": false
+  "batteryCapacityKwh": 100,
+  "initialBatterySocKwh": 50,
+  "criticalBuildings": ["LABORATORY"],
+  "scenarioConditions": [
+    { "type": "GRID_OUTAGE", "startHour": 18, "endHour": 20 }
+  ],
+  "smartStrategyConfig": {
+    "minimumReservePercent": 25,
+    "highPriceThreshold": 2.5,
+    "outageLookAheadHours": 3
+  },
+  "source": "dev"
 }
 
 ###
 
-### 6. TimescaleDB Ham Metrikler (Son 50 Kayıt)
+### 8. Geçmiş simülasyon çalıştırmaları
+GET http://localhost:5000/api/simulation/runs?limit=10
+
+###
+
+### 9. TimescaleDB Ham Metrikler (Son 50 Kayıt)
 GET http://localhost:5000/api/energy/metrics?limit=50
 Content-Type: application/json
 
 ###
 
-### 7. TimescaleDB time_bucket() Özetlenmiş Saatlik Grafikler (Chart.js için)
+### 10. TimescaleDB time_bucket() Özetlenmiş Saatlik Grafikler (Chart.js için)
 GET http://localhost:5000/api/energy/metrics/aggregated?interval=1%20hour
 Content-Type: application/json
 

@@ -1,5 +1,5 @@
 import { ENV } from '../config/env';
-import { BuildingType, EnergyEnvironmentInput } from '../types/energy.types';
+import { EnergyEnvironmentInput } from '../types/energy.types';
 import { SensorDataEvent } from '../types/rabbitmq-contracts';
 
 /**
@@ -16,7 +16,7 @@ export function sensorEventToEnvironment(event: SensorDataEvent): EnergyEnvironm
       id: r.buildingId,
       name: r.buildingName,
       type: r.buildingType,
-      isCritical: r.buildingType !== BuildingType.DORMITORY,
+      isCritical: ENV.SIMULATION.CRITICAL_BUILDINGS.includes(r.buildingType),
       demandKWh: r.currentDemandKWh,
     })),
     battery: {

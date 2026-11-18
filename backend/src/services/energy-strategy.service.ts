@@ -1,10 +1,9 @@
 import {
-  BuildingDemand,
   BuildingEnergyAllocation,
-  BuildingType,
   EnergyEnvironmentInput,
   StrategyDecisionResult,
 } from '../types/energy.types';
+import { ENV } from '../config/env';
 
 export class EnergyStrategyService {
   /**
@@ -114,7 +113,7 @@ export class EnergyStrategyService {
     const notes: string[] = [];
     const priceThreshold = input.priceThresholdCheap ?? 0.15;
     const isElectricityCheap = input.gridElectricityPrice <= priceThreshold;
-    const minReserveKWh = (input.battery.maxCapacityKWh * (input.battery.minReservePercent ?? 20)) / 100;
+    const minReserveKWh = (input.battery.maxCapacityKWh * (input.battery.minReservePercent ?? ENV.STRATEGY_DEFAULTS.BATTERY_MIN_RESERVE_PERCENT)) / 100;
 
     let currentBattery = input.battery.currentCapacityKWh;
     let solarGeneration = input.solarGenerationKWh;
@@ -184,15 +183,12 @@ export class EnergyStrategyService {
       // Mevcut toplam elde edilen temiz enerji miktarı (Güneş + Batarya)
       let availableTotalSupply = solarUsed + batteryDischarged;
 
-      // Binaları önceliğe göre sırala: Critical (Laboratory, Library) önce, Dormitory sonra
-      const prioritizedBuildings = [...input.buildings].sort((a, b) => {
-        const priorityScore = (bld: BuildingDemand) => {
-          if (bld.type === BuildingType.LABORATORY) return 3;
-          if (bld.type === BuildingType.LIBRARY) return 2;
-          return 1; // DORMITORY ve diğerleri
-        };
-        return priorityScore(b) - priorityScore(a);
-      });
+      // Binaları önceliğe göre sırala: kritik (isCritical) binalar önce, diğerleri sonra.
+      // Hangi binaların kritik olduğu yapılandırılabilir (CRITICAL_BUILDINGS) ve Core Engine ile ortaktır.
+      // Array.prototype.sort kararlıdır: aynı öncelikteki binaların sırası korunur.
+      const prioritizedBuildings = [...input.buildings].sort(
+        (a, b) => Number(b.isCritical) - Number(a.isCritical)
+      );
 
       for (const bld of prioritizedBuildings) {
         if (availableTotalSupply >= bld.demandKWh) {

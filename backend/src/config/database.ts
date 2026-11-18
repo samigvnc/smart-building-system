@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { ENV } from './env';
 
 export const dbPool = new Pool({
@@ -11,6 +11,67 @@ export const dbPool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
 });
+
+/**
+ * Simülasyon girdi verisi (BDG2 bina tüketimi, NSRDB güneş, tarife) ve simülasyon çalıştırma kayıtları.
+ * Core Engine'e giden 24 saatlik girdi bu tablolardan üretilir.
+ */
+async function initSimulationDataTables(client: PoolClient): Promise<void> {
+  // Saatlik bina tüketimi (BDG2'den içe aktarılır). Aynı (time, building_type, source) tekrar yazılabilir.
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS building_demand_readings (
+      time TIMESTAMPTZ NOT NULL,
+      building_type VARCHAR(50) NOT NULL,
+      demand_kwh DOUBLE PRECISION NOT NULL CHECK (demand_kwh >= 0),
+      source VARCHAR(50) NOT NULL DEFAULT 'bdg2'
+    );
+  `);
+  await client.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS building_demand_readings_uq
+      ON building_demand_readings (time, building_type, source);
+  `);
+
+  // Saatlik güneş üretimi (NSRDB'den içe aktarılır)
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS solar_readings (
+      time TIMESTAMPTZ NOT NULL,
+      generation_kwh DOUBLE PRECISION NOT NULL CHECK (generation_kwh >= 0),
+      source VARCHAR(50) NOT NULL DEFAULT 'nsrdb'
+    );
+  `);
+  await client.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS solar_readings_uq ON solar_readings (time, source);
+  `);
+
+  // Günün saatine göre elektrik tarifesi (para birimi/kWh)
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS grid_price_profile (
+      hour SMALLINT PRIMARY KEY CHECK (hour BETWEEN 0 AND 23),
+      price_per_kwh DOUBLE PRECISION NOT NULL CHECK (price_per_kwh >= 0)
+    );
+  `);
+
+  // Core Engine'e gönderilen istek ve dönen sonuç (Frontend geçmiş çalıştırmaları buradan okur)
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS simulation_runs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      data_date DATE,
+      request JSONB NOT NULL,
+      result JSONB NOT NULL
+    );
+  `);
+
+  for (const table of ['building_demand_readings', 'solar_readings']) {
+    await client
+      .query(`SELECT create_hypertable('${table}', 'time', if_not_exists => TRUE);`)
+      .catch(() => {
+        // TimescaleDB yoksa düz PostgreSQL tablosu olarak devam et
+      });
+  }
+
+  console.log('[Database] Simülasyon veri tabloları hazır.');
+}
 
 /**
  * TimescaleDB bağlantı kontrolü ve Hypertable başlatma fonksiyonu
@@ -52,6 +113,8 @@ export async function initDatabase(): Promise<void> {
     });
 
     console.log('[Database] "energy_metrics" zaman serisi tablosu hazır.');
+
+    await initSimulationDataTables(client);
   } catch (error) {
     console.error('[Database] Veritabanı başlatma hatası:', error);
     throw error;

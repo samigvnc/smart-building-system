@@ -12,49 +12,69 @@ Bu proje; yapay zeka destekli, çok binalı akıllı kampüs/bina enerji yöneti
            ▼ (RabbitMQ: sensor_data_queue)
 ┌─────────────────────────────────────────────────────────┐
 │              ANA BACKEND (Node.js / Express TS)         │
-│  - EnergyStrategyService (Basic & Smart Algoritmaları)  │
-│  - TimescaleDB (Zaman Serisi & Hypertable)              │
-│  - Dynamic Pricing & Load Shedding Engine               │
-│  - SimulationRunner (24-Saatlik Senaryo Analizi)        │
+│  - Canlı karar akışı (sensör -> strateji -> DB/yayın)   │
+│  - TimescaleDB: metrikler + BDG2/NSRDB/tarife verisi    │
+│  - Simülasyon API'si: veri hazırlar, Core Engine'i      │
+│    çağırır, sonucu saklar                               │
 └─────────────────────────────────────────────────────────┘
-           │                                 │
-           ▼ (RabbitMQ)                      ▼ (REST API)
-[ Core Calculation Engine ]       [ Frontend Arayüzü ]
-(Java / Spring Boot)              (React.js + Chart.js)
+      │ (RabbitMQ RPC: core_engine_queue)      │ (REST API)
+      ▼                                        ▼
+[ Core Engine / Simülasyon Motoru ]     [ Frontend Arayüzü ]
+(Java: Basic/Smart, senaryo, metrik)    (React.js + Chart.js)
 ```
+
+**Tek simülasyon mantığı Core Engine'dedir.** Backend istek/veri/DB/API tarafını yönetir. Ayrıntılı
+sözleşme: [docs/core-engine-contract.md](docs/core-engine-contract.md).
 
 ---
 
-## ⚡ Karar Mekanizmaları ve Stratejiler
+## ⚡ Ortak Varsayılanlar (Backend ↔ Core Engine)
 
-### 1. Basic Strategy (Sıralı Yaklaşım)
-1. Güneş Enerjisi $\ge$ Talep: Binalar beslenir, artan enerji bataryaya şarj edilir.
-2. Güneş Enerjisi $<$ Talep: Açık kalan kısım sırasıyla:
-   - Bataryadan çekilir (0 kWh'a kadar).
-   - Batarya biterse Şebekeden (Grid) çekilir.
-   - Şebeke de kesikse karşılanamayan kısım **Unserved Energy** olarak kaydedilir.
+| Ayar | Varsayılan | `.env` |
+|---|---|---|
+| Kritik binalar | `LABORATORY` (yapılandırılabilir) | `CRITICAL_BUILDINGS` |
+| Min. batarya rezervi | `%25` | `BATTERY_MIN_RESERVE_PERCENT` |
+| Yüksek fiyat eşiği | `2.5` | `SIMULATION_HIGH_PRICE_THRESHOLD` |
+| Kesinti ön bakış | `3` saat | `SIMULATION_OUTAGE_LOOKAHEAD_HOURS` |
 
-### 2. Smart Strategy (Kural ve Öncelik Tabanlı Yaklaşım)
-1. **Şebeke Fiyat Arbitrajı:** Elektrik fiyatı ucuzsa (`gridElectricityPrice <= 0.15`), batarya deşarj edilmez ve şebekeden çekim yapılarak batarya "Demand Spike" (pahalı saatler) için saklanır.
-2. **Kritik Rezerv Koruması:** Şebeke bağlıyken bataryada daima **minimum %20 rezerv** muhafaza edilir.
-3. **Kritik Yük Önceliklendirmesi (Load Shedding):** Şebeke kesintisinde ve enerji yetersizliğinde:
-   - **Öncelik 1:** `LABORATORY` (Kritik - en son kesilir)
-   - **Öncelik 2:** `LIBRARY` (Kritik)
-   - **Yük Atma:** `DORMITORY` (Enerjisi ilk kesilen yük)
+Bina tipleri: `LABORATORY`, `LIBRARY`, `DORMITORY`, `CAFETERIA`.
+
+Canlı sensör akışındaki karar motoru (`EnergyStrategyService`) aynı kritik bina ve rezerv ayarlarını kullanır:
+kritik binalar önce beslenir, kritik olmayanlar kesilir (load shedding).
 
 ---
 
 ## 📡 API Uç Noktaları ve Test
 
-Projede hazır istek senaryoları barındıran `api-requests.http` dosyası bulunmaktadır (VS Code REST Client eklentisi ile tek tıkla test edilebilir).
+`api-requests.http` dosyası hazır istekleri içerir (VS Code REST Client ile).
 
 | Metot | Uç Nokta | Açıklama |
 |---|---|---|
-| `GET` | `/api/health` | Sistem sağlık ve çalışma süresi kontrolü |
-| `POST` | `/api/energy/simulate-step` | Tekil zaman adımı simülasyonu (Zod doğrulama ile Basic veya Smart) |
-| `POST` | `/api/energy/run-scenario` | 24 saatlik senaryoyu koşar, Basic vs Smart karşılaştırma raporu üretir |
+| `GET` | `/api/health` | Sistem sağlık kontrolü |
+| `GET` | `/api/simulation/defaults` | Ortak varsayılanlar (Frontend formu için) |
+| `GET` | `/api/simulation/inputs` | DB'den hazırlanan 24 saatlik Core Engine girdisi (önizleme) |
+| `POST` | `/api/simulation/run` | Core Engine'de Basic vs Smart simülasyonu çalıştırır, sonucu saklar |
+| `GET` | `/api/simulation/runs`, `/runs/:id` | Geçmiş simülasyon çalıştırmaları |
+| `POST` | `/api/energy/simulate-step` | Tekil adım için canlı karar motoru (Basic/Smart) |
 | `GET` | `/api/energy/metrics` | Ham zaman serisi verileri |
-| `GET` | `/api/energy/metrics/aggregated` | TimescaleDB `time_bucket()` ile özetlenmiş Chart.js verisi |
+| `GET` | `/api/energy/metrics/aggregated` | `time_bucket()` ile özetlenmiş veri |
+
+> `POST /api/energy/run-scenario` kaldırıldı; yerine `POST /api/simulation/run` kullanılır.
+> Core Engine çalışmıyorsa `/run` isteği `504` (yanıt yok) veya `503` (broker yok) döner.
+
+---
+
+## 🗄️ Simülasyon Verisi (BDG2 / NSRDB / tarife)
+
+```bash
+npm run seed:dev                                   # Core Engine'in dev CSV'lerini DB'ye yükler
+npm run import:data -- demand bdg2_long.csv        # timestamp,building_type,demand_kwh
+npm run import:data -- solar  nsrdb.csv            # timestamp,generation_kwh
+npm run import:data -- price  tariff.csv           # hour,price_per_kwh
+```
+
+Zaman damgaları ISO-8601 (saat dilimi yoksa UTC). Gerçek BDG2 dosyası geniş biçimde (sütun = bina) gelir;
+`building_type` eşlemesiyle uzun biçime dönüştüren araç dosya paylaşılınca eklenecek.
 
 ---
 
@@ -65,7 +85,7 @@ Karar algoritmalarımızın (Basic & Smart Strategy) matematiksel doğruluğunu 
 ```bash
 npm test
 ```
-*(Node.js yerleşik test motoru ile `tests/energy-strategy.test.ts` dosyasını çalıştırır).*
+*(Node.js yerleşik test motoru ile `tests/` altındaki tüm testleri çalıştırır).*
 
 ---
 

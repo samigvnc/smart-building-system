@@ -1,11 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { EnergyStrategyService } from '../services/energy-strategy.service';
 import { TimescaleService } from '../services/timescale.service';
-import { SimulationRunnerService } from '../services/simulation-runner.service';
 import { RabbitMQService } from '../message-brokers/rabbitmq.service';
 import {
   simulateStepSchema,
-  runScenarioSchema,
   metricsQuerySchema,
   aggregatedQuerySchema,
 } from '../validators/energy.validator';
@@ -15,7 +13,6 @@ import { LiveDecisionBroadcastEvent } from '../types/rabbitmq-contracts';
 export class EnergyController {
   private strategyService = new EnergyStrategyService();
   private timescaleService = new TimescaleService();
-  private simulationRunner = new SimulationRunnerService();
   private rabbitmq = RabbitMQService.getInstance();
 
   /**
@@ -84,42 +81,6 @@ export class EnergyController {
       const { interval } = aggregatedQuerySchema.parse(req.query);
       const aggregated = await this.timescaleService.getAggregatedMetrics(interval);
       res.status(200).json({ success: true, interval, data: aggregated });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * 24 saatlik veya özel senaryolu Basic vs Smart karşılaştırmalı simülasyonu çalıştırır
-   * POST /api/energy/run-scenario
-   */
-  public runScenarioSimulation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const validatedConfig = runScenarioSchema.parse(req.body);
-
-      const report = this.simulationRunner.runComparisonSimulation({
-        scenarioName: validatedConfig.scenarioName || '24-Saatlik Kampüs Kesinti ve Fiyat Arbitrajı Simülasyonu',
-        durationHours: validatedConfig.durationHours,
-        gridOutageStartHour: validatedConfig.gridOutageStartHour,
-        gridOutageDurationHours: validatedConfig.gridOutageDurationHours,
-        cloudyDayFactor: validatedConfig.cloudyDayFactor,
-        batteryCapacityKWh: validatedConfig.batteryCapacityKWh,
-        initialBatteryKWh: validatedConfig.initialBatteryKWh,
-        priceModel: validatedConfig.priceModel,
-      });
-
-      if (validatedConfig.saveToDatabase) {
-        // Frontend kıyaslaması için her iki stratejinin kararları da kaydedilir
-        const decisions = [...report.basicStrategyReport.decisions, ...report.smartStrategyReport.decisions];
-        for (const dec of decisions) {
-          await this.timescaleService.logEnergyMetrics(dec);
-        }
-      }
-
-      res.status(200).json({
-        success: true,
-        report,
-      });
     } catch (error) {
       next(error);
     }

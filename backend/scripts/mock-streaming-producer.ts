@@ -54,6 +54,13 @@ async function runMockStreamingProducer() {
           currentDemandKWh: Number((30 + Math.random() * 8).toFixed(2)),
           voltage: 230,
         },
+        {
+          buildingId: 'bld-cafe-01',
+          buildingName: 'Merkez Yemekhane',
+          buildingType: BuildingType.CAFETERIA,
+          currentDemandKWh: Number((10 + Math.random() * 4).toFixed(2)),
+          voltage: 230,
+        },
       ],
     };
 
