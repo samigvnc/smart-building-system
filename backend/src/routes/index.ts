@@ -1,10 +1,8 @@
 import { Router } from 'express';
-import energyRoutes from './energy.routes';
 import simulationRoutes from './simulation.routes';
 
 const rootRouter = Router();
 
-rootRouter.use('/energy', energyRoutes);
 rootRouter.use('/simulation', simulationRoutes);
 
 rootRouter.get('/health', (req, res) => {
@@ -12,4 +10,3 @@ rootRouter.get('/health', (req, res) => {
 });
 
 export default rootRouter;
-

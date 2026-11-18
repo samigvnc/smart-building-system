@@ -37,7 +37,6 @@ export const ENV = {
     URL: process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672',
     SENSOR_QUEUE: process.env.RABBITMQ_SENSOR_QUEUE || 'sensor_data_queue',
     CORE_ENGINE_QUEUE: process.env.RABBITMQ_CORE_ENGINE_QUEUE || 'core_engine_queue',
-    DECISIONS_QUEUE: process.env.RABBITMQ_ENERGY_DECISIONS_QUEUE || 'energy_decisions_queue',
   },
   /**
    * Backend ile Core Engine (Java) arasında ORTAK varsayılanlar.
@@ -52,6 +51,14 @@ export const ENV = {
   STRATEGY_DEFAULTS: {
     BATTERY_MIN_RESERVE_PERCENT: numberOr(process.env.BATTERY_MIN_RESERVE_PERCENT, 25),
     BATTERY_MAX_CAPACITY_KWH: numberOr(process.env.BATTERY_MAX_CAPACITY_KWH, 100),
-    ELECTRICITY_CHEAP_PRICE_THRESHOLD: numberOr(process.env.ELECTRICITY_CHEAP_PRICE_THRESHOLD, 0.15),
+  },
+  /** NSRDB (NLR/NREL) API: https://developer.nlr.gov/docs/solar/nsrdb/ — anahtar ve e-posta kullanıcıya aittir. */
+  NSRDB: {
+    BASE_URL: process.env.NSRDB_BASE_URL || 'https://developer.nlr.gov/api/nsrdb/v2/solar/',
+    ENDPOINT: process.env.NSRDB_ENDPOINT || 'nsrdb-GOES-aggregated-v4-0-0-download.csv',
+    API_KEY: process.env.NSRDB_API_KEY || '',
+    EMAIL: process.env.NSRDB_EMAIL || '',
+    FULL_NAME: process.env.NSRDB_FULL_NAME || 'Smart Building System',
+    AFFILIATION: process.env.NSRDB_AFFILIATION || 'Student project',
   },
 };

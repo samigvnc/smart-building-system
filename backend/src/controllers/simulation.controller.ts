@@ -4,6 +4,7 @@ import { AppError } from '../middlewares/error.middleware';
 import {
   PgSimulationDataRepository,
   PgSimulationRunsRepository,
+  getProfileSetSummaries,
   SimulationRunsRepository,
 } from '../repositories/simulation-data.repository';
 import { SimulationInputService } from '../services/simulation-input.service';
@@ -46,6 +47,18 @@ export class SimulationController {
         },
       },
     });
+  };
+
+  /**
+   * Hazır profil setleri (source) ve kapsadıkları tarih aralığı.
+   * GET /api/simulation/data-summary
+   */
+  public getDataSummary = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      res.status(200).json({ success: true, data: await getProfileSetSummaries() });
+    } catch (error) {
+      next(error);
+    }
   };
 
   /**

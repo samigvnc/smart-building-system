@@ -1,0 +1,15 @@
+{
+  "_comment": "Core Engine'in kullanacağı bina profillerinin BDG2'deki hangi binalara eşleneceği. Aşağıdaki seçim GEÇİCİDİR (Fox sahası; orta ölçekli, veri doluluğu yüksek binalar). Core Engine ekibi değiştirebilir: npm run profiles:suggest -- --site Fox, sonra npm run profiles:build. scale: tüketim çarpanı; solar.capacityKwp: kurulu güç (kWp), üretim = kWp x GHI/1000 x performanceRatio.",
+  "profileSet": "real",
+  "demand": {
+    "DORMITORY": { "bdg2BuildingId": "Fox_lodging_Alana", "scale": 1 },
+    "LIBRARY": { "bdg2BuildingId": "Fox_public_Bart", "scale": 1 },
+    "LABORATORY": { "bdg2BuildingId": "Fox_education_Eldon", "scale": 1 },
+    "CAFETERIA": { "bdg2BuildingId": "Fox_food_Francesco", "scale": 1 }
+  },
+  "solar": {
+    "siteId": "Fox",
+    "capacityKwp": 500,
+    "performanceRatio": 0.8
+  }
+}

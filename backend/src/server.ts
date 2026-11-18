@@ -2,47 +2,28 @@ import { createApp } from './app';
 import { ENV } from './config/env';
 import { dbPool, initDatabase } from './config/database';
 import { RabbitMQService } from './message-brokers/rabbitmq.service';
-import { EnergyStrategyService } from './services/energy-strategy.service';
-import { TimescaleService } from './services/timescale.service';
+import { SensorTelemetryRepository } from './repositories/sensor-telemetry.repository';
 import { sensorDataEventSchema } from './validators/sensor.validator';
-import { sensorEventToEnvironment } from './mappers/sensor-event.mapper';
-import { LiveDecisionBroadcastEvent } from './types/rabbitmq-contracts';
 
 async function bootstrap() {
   const app = createApp();
 
-  // 1. Veritabanı ve TimescaleDB Hypertable başlatma
+  // 1. Veritabanı tablolarını hazırla
   try {
     await initDatabase();
   } catch (err: any) {
     console.warn('[Bootstrap] Veritabanı bağlantı uyarısı (PostgreSQL servisi çalışıyor mu?):', err.message);
   }
 
-  // 2. RabbitMQ Başlatma ve Consumer Kurulumu
-  const rabbitmq = RabbitMQService.getInstance();
-  const strategyService = new EnergyStrategyService();
-  const timescaleService = new TimescaleService();
-
-  // Data Streaming servisinden gelen canlı sensör verilerini dinle.
+  // 2. RabbitMQ: sensör telemetrisini yalnızca SAKLA (karar verme işi Core Engine'dedir).
   // Handler önce kaydedilir; broker geç gelse bile bağlanınca otomatik abone olunur.
+  const rabbitmq = RabbitMQService.getInstance();
+  const telemetryRepository = new SensorTelemetryRepository();
+
   await rabbitmq.consumeQueue(ENV.RABBITMQ.SENSOR_QUEUE, async (raw) => {
     // Şema dışı mesaj ZodError fırlatır -> dead_letter_queue'ya taşınır
     const event = sensorDataEventSchema.parse(raw);
-    const decision = strategyService.executeSmartStrategy(sensorEventToEnvironment(event));
-
-    // DB hatası kararın yayınlanmasını engellemesin
-    try {
-      await timescaleService.logEnergyMetrics(decision);
-    } catch (err: any) {
-      console.warn('[Consumer] Metrik DB\'ye yazılamadı:', err.message);
-    }
-
-    const broadcast: LiveDecisionBroadcastEvent = {
-      eventType: 'ENERGY_DECISION_UPDATED',
-      timestamp: new Date().toISOString(),
-      decision,
-    };
-    await rabbitmq.publishToQueue(ENV.RABBITMQ.DECISIONS_QUEUE, broadcast);
+    await telemetryRepository.save(event);
   });
 
   try {

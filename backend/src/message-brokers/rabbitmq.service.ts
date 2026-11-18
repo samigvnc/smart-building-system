@@ -39,7 +39,6 @@ export class RabbitMQService {
       // Gerekli kuyrukları tanımla
       await channel.assertQueue(ENV.RABBITMQ.SENSOR_QUEUE, { durable: true });
       await channel.assertQueue(ENV.RABBITMQ.CORE_ENGINE_QUEUE, { durable: true });
-      await channel.assertQueue(ENV.RABBITMQ.DECISIONS_QUEUE, { durable: true });
       await channel.assertQueue(DEAD_LETTER_QUEUE, { durable: true });
 
       // Aynı anda tek mesaj işle: sıra korunur, DB yazımı geride kalırsa bellek şişmez

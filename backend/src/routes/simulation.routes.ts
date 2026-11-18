@@ -5,6 +5,7 @@ const router = Router();
 const controller = new SimulationController();
 
 router.get('/defaults', controller.getDefaults);
+router.get('/data-summary', controller.getDataSummary);
 router.get('/inputs', controller.getInputs);
 router.post('/run', controller.run);
 router.get('/runs', controller.listRuns);

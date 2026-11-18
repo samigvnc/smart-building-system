@@ -1,13 +1,12 @@
-import { BuildingType, StrategyDecisionResult } from './energy.types';
+import { BuildingType } from './energy.types';
 
 /**
  * Core Engine (Java simülasyon motoru) mesajları için bkz. ./simulation-contract.ts
- * (Backend -> core_engine_queue RPC isteği ve yanıtı burada DEĞİL, orada tanımlıdır.)
  */
 
 /**
- * 1. Data Streaming (Socket.io) -> RabbitMQ (sensor_data_queue) -> Backend
- * Sensörlerden gelen anlık telemetri paketi.
+ * Data Streaming (Socket.io) -> RabbitMQ (sensor_data_queue) -> Backend
+ * Sensörlerden gelen anlık telemetri paketi. Backend yalnızca saklar; karar vermez.
  */
 export interface SensorDataEvent {
   eventId: string;
@@ -25,14 +24,4 @@ export interface SensorDataEvent {
     powerFactor?: number;
     voltage?: number;
   }[];
-}
-
-/**
- * 2. Backend -> RabbitMQ (energy_decisions_queue) -> Frontend Socket.io / Dashboard
- * Gerçekleşen kararın yayını.
- */
-export interface LiveDecisionBroadcastEvent {
-  eventType: 'ENERGY_DECISION_UPDATED';
-  timestamp: string;
-  decision: StrategyDecisionResult;
 }

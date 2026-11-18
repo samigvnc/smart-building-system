@@ -1,34 +1,65 @@
 # Smart Building System - Ana Backend
 
-Bu proje; yapay zeka destekli, çok binalı akıllı kampüs/bina enerji yönetim ve simülasyon sisteminin **Ana Backend** katmanıdır.
+Bu katman **yalnızca iki iş** yapar: **veri yönetimi (DB)** ve **API ile haberleşme**.
+Enerji stratejileri, senaryo uygulaması ve metrik hesapları **Core Engine'de (Java)** yapılır; backend karar vermez.
 
 ---
 
-## 🏛️ Mimari ve Servisler Arası İletişim
+## 🏛️ Mimari
 
 ```
-[ Canlı Sensör Verisi ] (Node.js / Socket.io)
-           │
-           ▼ (RabbitMQ: sensor_data_queue)
-┌─────────────────────────────────────────────────────────┐
-│              ANA BACKEND (Node.js / Express TS)         │
-│  - Canlı karar akışı (sensör -> strateji -> DB/yayın)   │
-│  - TimescaleDB: metrikler + BDG2/NSRDB/tarife verisi    │
-│  - Simülasyon API'si: veri hazırlar, Core Engine'i      │
-│    çağırır, sonucu saklar                               │
-└─────────────────────────────────────────────────────────┘
-      │ (RabbitMQ RPC: core_engine_queue)      │ (REST API)
-      ▼                                        ▼
-[ Core Engine / Simülasyon Motoru ]     [ Frontend Arayüzü ]
-(Java: Basic/Smart, senaryo, metrik)    (React.js + Chart.js)
+BDG2 ham veri ─► backend ön işleme ─► TimescaleDB ─► backend API ─► SimulationInputProvider ─► Simülasyon Motoru (Java)
+NSRDB (API)  ─►                                                                                        │
+                                                                                                        ▼
+[ Frontend ] ◄──────────── REST API (/api/simulation/*) ◄────────── backend ◄──── StrategyComparisonResult
 ```
 
-**Tek simülasyon mantığı Core Engine'dedir.** Backend istek/veri/DB/API tarafını yönetir. Ayrıntılı
-sözleşme: [docs/core-engine-contract.md](docs/core-engine-contract.md).
+| Backend'in işi | Core Engine'in işi |
+|---|---|
+| BDG2 ve NSRDB verisini indirmek, DB'ye yazmak | Bina profillerini (hangi BDG2 binası) seçmek |
+| Core Engine'in okuyacağı 24 saatlik girdiyi hazırlamak | Basic/Smart strateji, senaryo, metrik |
+| İsteği Core Engine'e iletmek, sonucu saklamak | Simülasyon sonucunu üretmek |
+| Frontend için REST API | Dış API'ye bağlanmamak (veri backend'den gelir) |
+
+Ayrıntılı sözleşme: [docs/core-engine-contract.md](docs/core-engine-contract.md).
 
 ---
 
-## ⚡ Ortak Varsayılanlar (Backend ↔ Core Engine)
+## 🗄️ Veri: BDG2 + NSRDB
+
+Veri kaynakları:
+- **BDG2** ([Building Data Genome Project 2](https://github.com/buds-lab/building-data-genome-project-2), Miller vd. 2020, *Scientific Data*): saatlik elektrik tüketimi + bina üstverisi (2016-2017). Lisans/atıf koşulları için deponun sayfasına bakın.
+- **NSRDB** ([NLR/NREL](https://developer.nlr.gov/docs/solar/nsrdb/)): saatlik güneş ışınımı (GHI), API ile çekilir.
+
+Ham dosyalar `backend/data/raw/` altına iner ve **git'e eklenmez** (~175 MB).
+
+```bash
+npm run bdg2:download                    # metadata.csv + electricity_cleaned.csv indirir, SHA-256 doğrular
+npm run bdg2:import                      # metadata (1636 bina) + elektrik (varsayılan saha: Fox, Hog) -> DB
+npm run bdg2:import -- --sites Fox,Bull  # başka sahalar;  --sites all  -> hepsi (~22 milyon satır)
+
+npm run nsrdb:fetch -- --site Fox --years 2016,2017   # NSRDB_API_KEY ve NSRDB_EMAIL gerekir (.env)
+
+npm run profiles:suggest -- --site Fox   # bina tipi başına aday BDG2 binalarını listeler
+npm run profiles:build                   # config/building-profile-mapping.json'a göre hazır profilleri yazar
+
+npm run seed:dev                         # Core Engine'in geliştirme CSV'leri + tarife (source=dev)
+```
+
+**Tablolar:** ham → `bdg2_buildings`, `bdg2_electricity_readings`, `nsrdb_ghi_readings`;
+hazır profiller → `building_demand_readings`, `solar_readings` (`source` = profil seti adı, örn. `real`, `dev`);
+`grid_price_profile` (tarife), `simulation_runs` (Core Engine istek/sonuç kaydı), `sensor_telemetry` (ham sensör verisi).
+
+**Zaman damgaları:** BDG2 ve NSRDB saatleri *saha yerel saati* olarak, değiştirilmeden saklanır (UTC etiketli).
+"Günün 0-23. saati" bu yüzden yerel saat anlamına gelir. NSRDB `utc=false` ile yerel *standart* saat verir;
+yaz saati uygulayan sahalarda BDG2 ile 1 saatlik fark olabilir (Fox/Arizona yaz saati uygulamaz).
+
+**Bina profili seçimi** `config/building-profile-mapping.json` dosyasındadır ve **Core Engine ekibine aittir**
+(hangi BDG2 binası → DORMITORY/LIBRARY/LABORATORY/CAFETERIA, ölçek çarpanı, güneş kurulu gücü).
+
+---
+
+## ⚙️ Ortak Varsayılanlar (Backend ↔ Core Engine)
 
 | Ayar | Varsayılan | `.env` |
 |---|---|---|
@@ -37,14 +68,11 @@ sözleşme: [docs/core-engine-contract.md](docs/core-engine-contract.md).
 | Yüksek fiyat eşiği | `2.5` | `SIMULATION_HIGH_PRICE_THRESHOLD` |
 | Kesinti ön bakış | `3` saat | `SIMULATION_OUTAGE_LOOKAHEAD_HOURS` |
 
-Bina tipleri: `LABORATORY`, `LIBRARY`, `DORMITORY`, `CAFETERIA`.
-
-Canlı sensör akışındaki karar motoru (`EnergyStrategyService`) aynı kritik bina ve rezerv ayarlarını kullanır:
-kritik binalar önce beslenir, kritik olmayanlar kesilir (load shedding).
+Bina tipleri: `LABORATORY`, `LIBRARY`, `DORMITORY`, `CAFETERIA`. Bunlar yalnızca istekle Core Engine'e iletilir.
 
 ---
 
-## 📡 API Uç Noktaları ve Test
+## 📡 API Uç Noktaları
 
 `api-requests.http` dosyası hazır istekleri içerir (VS Code REST Client ile).
 
@@ -52,64 +80,31 @@ kritik binalar önce beslenir, kritik olmayanlar kesilir (load shedding).
 |---|---|---|
 | `GET` | `/api/health` | Sistem sağlık kontrolü |
 | `GET` | `/api/simulation/defaults` | Ortak varsayılanlar (Frontend formu için) |
+| `GET` | `/api/simulation/data-summary` | Hazır profil setleri, tarih aralıkları, bina tipleri |
 | `GET` | `/api/simulation/inputs` | DB'den hazırlanan 24 saatlik Core Engine girdisi (önizleme) |
-| `POST` | `/api/simulation/run` | Core Engine'de Basic vs Smart simülasyonu çalıştırır, sonucu saklar |
+| `POST` | `/api/simulation/run` | Girdiyi Core Engine'e gönderir, sonucu saklar ve döner |
 | `GET` | `/api/simulation/runs`, `/runs/:id` | Geçmiş simülasyon çalıştırmaları |
-| `POST` | `/api/energy/simulate-step` | Tekil adım için canlı karar motoru (Basic/Smart) |
-| `GET` | `/api/energy/metrics` | Ham zaman serisi verileri |
-| `GET` | `/api/energy/metrics/aggregated` | `time_bucket()` ile özetlenmiş veri |
 
-> `POST /api/energy/run-scenario` kaldırıldı; yerine `POST /api/simulation/run` kullanılır.
-> Core Engine çalışmıyorsa `/run` isteği `504` (yanıt yok) veya `503` (broker yok) döner.
+Core Engine çalışmıyorsa `/run` isteği `504` (yanıt yok) veya `503` (broker yok) döner.
 
----
-
-## 🗄️ Simülasyon Verisi (BDG2 / NSRDB / tarife)
-
-```bash
-npm run seed:dev                                   # Core Engine'in dev CSV'lerini DB'ye yükler
-npm run import:data -- demand bdg2_long.csv        # timestamp,building_type,demand_kwh
-npm run import:data -- solar  nsrdb.csv            # timestamp,generation_kwh
-npm run import:data -- price  tariff.csv           # hour,price_per_kwh
-```
-
-Zaman damgaları ISO-8601 (saat dilimi yoksa UTC). Gerçek BDG2 dosyası geniş biçimde (sütun = bina) gelir;
-`building_type` eşlemesiyle uzun biçime dönüştüren araç dosya paylaşılınca eklenecek.
+**Sensör akışı:** `sensor_data_queue`'ya gelen telemetri doğrulanıp `sensor_telemetry` tablosuna yazılır.
+Bozuk mesajlar `dead_letter_queue`'ya taşınır. Backend bu veriden karar üretmez.
 
 ---
 
-## 🧪 Birim Testleri (Unit Tests)
-
-Karar algoritmalarımızın (Basic & Smart Strategy) matematiksel doğruluğunu test etmek için:
+## 🧪 Testler
 
 ```bash
 npm test
 ```
-*(Node.js yerleşik test motoru ile `tests/` altındaki tüm testleri çalıştırır).*
 
 ---
 
-## 🚀 Başlangıç & Kurulum Adımları
+## 🚀 Başlangıç
 
-### 1. Bağımlılıkları Yükleyin:
 ```bash
 npm install
-```
-
-### 2. Çevre Değişkenlerini Ayarlayın:
-`.env.example` dosyasını `.env` olarak kopyalayın:
-```bash
 cp .env.example .env
-```
-
-### 3. Geliştirme Modunda Çalıştırın:
-```bash
+docker compose up -d        # TimescaleDB + RabbitMQ
 npm run dev
-```
-
-### 4. Git İle GitHub'a Gönderme:
-```bash
-git add .
-git commit -m "feat: complete initial backend architecture with TimescaleDB, RabbitMQ, and strategy engine"
-git push origin main
 ```

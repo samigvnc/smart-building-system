@@ -157,3 +157,6 @@ target/
 
 # VS Code
 .vscode/
+
+# Backend: indirilen ham veri setleri (BDG2 ~175 MB) git'e eklenmez
+backend/data/raw/

@@ -126,15 +126,14 @@ POST /api/simulation/run ──► backend 24 saatlik girdi hazırlar ──► 
                                               ◄────────── StrategyComparisonResult ◄──┘
 ```
 
-Şu an geliştirme verisi için: `npm run seed:dev` (Core Engine'in `src/main/resources/data` CSV'lerini yükler).
+Geliştirme verisi için: `npm run seed:dev` (Core Engine'in `src/main/resources/data` CSV'lerini yükler, `source=dev`).
+Gerçek veri: `bdg2:download` → `bdg2:import` → `nsrdb:fetch` → `profiles:build` (`source=real`). Ayrıntı: [README](../README.md).
 
 ## Henüz netleşmesi gerekenler
 
-1. **Taşıma:** RabbitMQ RPC önerildi (mimaride zaten var). Java tarafı HTTP tercih ederse yalnızca
-   `src/services/core-engine.client.ts` değişir; sözleşme aynı kalır.
-2. **Fiyat birimi:** Java `price.csv` ve `highPriceThreshold` (2.5) para birimi/kWh; canlı sensör akışındaki
-   "ucuz" eşiği (`ELECTRICITY_CHEAP_PRICE_THRESHOLD=0.15`) farklı ölçekte. Tek birim üzerinde anlaşılmalı.
-3. **Canlı karar mantığı:** Sensörden gelen anlık karar akışı (`EnergyStrategyService`) şimdilik backend'de
-   duruyor (Core Engine 24 saatlik toplu simülasyon). Ortak kural: kritik binalar önce, %25 rezerv. Smart stratejinin
-   kendisi ise iki yerde farklı (backend: ucuz fiyatta bataryayı koru; Java: pahalı fiyatta ve kesinti
-   yaklaşmıyorsa deşarj et). Canlı akışın da Core Engine'e taşınıp taşınmayacağına birlikte karar verilmeli.
+1. **Taşıma:** RabbitMQ RPC önerildi (mimaride zaten var, backend tarafı canlı RabbitMQ ile denendi).
+   Java tarafı HTTP tercih ederse yalnızca `src/services/core-engine.client.ts` değişir; sözleşme aynı kalır.
+2. **Fiyat birimi:** Java `price.csv` ve `highPriceThreshold` (2.5) para birimi/kWh. Tarife (`grid_price_profile`)
+   şimdilik Core Engine'in `price.csv` dosyasından gelir (`npm run seed:dev`); gerçek tarife kaynağı belirlenmeli.
+3. **Veri ölçeği:** BDG2 binaları gerçek bina ölçeğindedir (yüzlerce kWh/saat); dev CSV'ler ise küçüktür.
+   Ölçek çarpanı ve güneş kurulu gücü `config/building-profile-mapping.json` içindedir.

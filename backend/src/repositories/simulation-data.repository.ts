@@ -147,3 +147,36 @@ export class PgSimulationRunsRepository implements SimulationRunsRepository {
     }));
   }
 }
+
+export interface ProfileSetSummary {
+  source: string;
+  demandFrom: string | null;
+  demandTo: string | null;
+  buildingTypes: string[];
+  solarFrom: string | null;
+  solarTo: string | null;
+}
+
+/** Hazır profil setlerinin (source) kapsadığı tarih aralığı ve bina tipleri. */
+export async function getProfileSetSummaries(): Promise<ProfileSetSummary[]> {
+  const demand = await dbPool.query(
+    `SELECT source, MIN(time)::date::text AS from_day, MAX(time)::date::text AS to_day,
+            ARRAY_AGG(DISTINCT building_type ORDER BY building_type) AS types
+       FROM building_demand_readings GROUP BY source ORDER BY source`
+  );
+  const solar = await dbPool.query(
+    `SELECT source, MIN(time)::date::text AS from_day, MAX(time)::date::text AS to_day
+       FROM solar_readings GROUP BY source`
+  );
+  const solarBySource = new Map<string, { from_day: string; to_day: string }>(
+    solar.rows.map((r) => [r.source, r])
+  );
+  return demand.rows.map((r) => ({
+    source: r.source,
+    demandFrom: r.from_day,
+    demandTo: r.to_day,
+    buildingTypes: r.types,
+    solarFrom: solarBySource.get(r.source)?.from_day ?? null,
+    solarTo: solarBySource.get(r.source)?.to_day ?? null,
+  }));
+}
