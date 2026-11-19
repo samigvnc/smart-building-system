@@ -41,6 +41,8 @@ class SimulationServiceTest {
         assertNotNull(result);
         assertNotNull(result.basic());
         assertNotNull(result.smart());
+        assertNotNull(result.custom());
+
 
         assertEquals(
                 24,
