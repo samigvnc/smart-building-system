@@ -4,114 +4,44 @@ Content-Type: application/json
 
 ###
 
-### 2. Basic Strategy - Güneş Fazlası & Batarya Şarj Senaryosu
-POST http://localhost:5000/api/energy/simulate-step
+### 2. Ortak varsayılanlar (kritik bina, %25 rezerv, eşikler)
+GET http://localhost:5000/api/simulation/defaults
+
+###
+
+### 3. Hazır profil setleri
+GET http://localhost:5000/api/simulation/data-summary
+
+###
+
+### 4. DB'den hazırlanan 24 saatlik Core Engine girdisi (önizleme)
+# Önce veri yükleyin: npm run seed:dev (source=dev) veya npm run profiles:build (source=real)
+GET http://localhost:5000/api/simulation/inputs?source=dev&criticalBuildings=LABORATORY,LIBRARY
+
+###
+
+### 5. Core Engine'de Basic vs Smart simülasyonu (Java servisi core_engine_queue'yu dinlemelidir)
+POST http://localhost:5000/api/simulation/run
 Content-Type: application/json
 
 {
-  "strategy": "BASIC",
-  "environment": {
-    "timestamp": "2026-11-07T12:00:00Z",
-    "solarGenerationKWh": 85.0,
-    "isGridAvailable": true,
-    "gridElectricityPrice": 0.18,
-    "battery": {
-      "currentCapacityKWh": 20.0,
-      "maxCapacityKWh": 100.0,
-      "minReservePercent": 20
-    },
-    "buildings": [
-      { "id": "b1", "name": "Biyoteknoloji Laboratuvarı", "type": "LABORATORY", "isCritical": true, "demandKWh": 25 },
-      { "id": "b2", "name": "Merkez Kütüphane", "type": "LIBRARY", "isCritical": true, "demandKWh": 15 },
-      { "id": "b3", "name": "Öğrenci Yurdu A Blok", "type": "DORMITORY", "isCritical": false, "demandKWh": 20 }
-    ]
-  }
+  "batteryCapacityKwh": 100,
+  "initialBatterySocKwh": 50,
+  "criticalBuildings": ["LABORATORY"],
+  "scenarioConditions": [
+    { "type": "GRID_OUTAGE", "startHour": 18, "endHour": 20 }
+  ],
+  "smartStrategyConfig": {
+    "minimumReservePercent": 25,
+    "highPriceThreshold": 2.5,
+    "outageLookAheadHours": 3
+  },
+  "source": "dev"
 }
 
 ###
 
-### 3. Smart Strategy - Şebeke Kesintisi & Öncelikli Yük Atma (Load Shedding)
-# Bu senaryoda şebeke kesiktir, güneş yetersizdir.
-# Laboratuvar ve Kütüphane %100 beslenirken, Öğrenci Yurdu kesintiye uğrar.
-POST http://localhost:5000/api/energy/simulate-step
-Content-Type: application/json
-
-{
-  "strategy": "SMART",
-  "environment": {
-    "timestamp": "2026-11-07T14:30:00Z",
-    "solarGenerationKWh": 15.0,
-    "isGridAvailable": false,
-    "gridElectricityPrice": 0.25,
-    "battery": {
-      "currentCapacityKWh": 25.0,
-      "maxCapacityKWh": 100.0,
-      "minReservePercent": 20
-    },
-    "buildings": [
-      { "id": "b1", "name": "Biyoteknoloji Laboratuvarı", "type": "LABORATORY", "isCritical": true, "demandKWh": 20 },
-      { "id": "b2", "name": "Merkez Kütüphane", "type": "LIBRARY", "isCritical": true, "demandKWh": 15 },
-      { "id": "b3", "name": "Öğrenci Yurdu A Blok", "type": "DORMITORY", "isCritical": false, "demandKWh": 30 }
-    ]
-  }
-}
+### 6. Geçmiş simülasyon çalıştırmaları
+GET http://localhost:5000/api/simulation/runs?limit=10
 
 ###
-
-### 4. Smart Strategy - Fiyat Arbitrajı (Ucuz Elektrikte Bataryayı Koruma)
-# Bu senaryoda şebeke elektriği çok ucuzdur (0.09 $/kWh <= 0.15).
-# Batarya dolu olsa dahi harcanmaz, ucuz şebekeden alınarak batarya akşam pik saatine saklanır.
-POST http://localhost:5000/api/energy/simulate-step
-Content-Type: application/json
-
-{
-  "strategy": "SMART",
-  "environment": {
-    "timestamp": "2026-11-07T03:00:00Z",
-    "solarGenerationKWh": 0.0,
-    "isGridAvailable": true,
-    "gridElectricityPrice": 0.09,
-    "priceThresholdCheap": 0.15,
-    "battery": {
-      "currentCapacityKWh": 80.0,
-      "maxCapacityKWh": 100.0,
-      "minReservePercent": 20
-    },
-    "buildings": [
-      { "id": "b1", "name": "Biyoteknoloji Laboratuvarı", "type": "LABORATORY", "isCritical": true, "demandKWh": 10 },
-      { "id": "b2", "name": "Merkez Kütüphane", "type": "LIBRARY", "isCritical": true, "demandKWh": 8 },
-      { "id": "b3", "name": "Öğrenci Yurdu A Blok", "type": "DORMITORY", "isCritical": false, "demandKWh": 12 }
-    ]
-  }
-}
-
-###
-
-### 5. 24-Saatlik Senaryo Simülatörü ve Basic vs Smart Kıyaslama Raporu
-POST http://localhost:5000/api/energy/run-scenario
-Content-Type: application/json
-
-{
-  "scenarioName": "24-Saatlik Gerçek Zamanlı Kampüs Simülasyonu",
-  "durationHours": 24,
-  "gridOutageStartHour": 14,
-  "gridOutageDurationHours": 4,
-  "cloudyDayFactor": 0.85,
-  "batteryCapacityKWh": 150,
-  "initialBatteryKWh": 50,
-  "priceModel": "TIME_OF_USE",
-  "saveToDatabase": false
-}
-
-###
-
-### 6. TimescaleDB Ham Metrikler (Son 50 Kayıt)
-GET http://localhost:5000/api/energy/metrics?limit=50
-Content-Type: application/json
-
-###
-
-### 7. TimescaleDB time_bucket() Özetlenmiş Saatlik Grafikler (Chart.js için)
-GET http://localhost:5000/api/energy/metrics/aggregated?interval=1%20hour
-Content-Type: application/json
-

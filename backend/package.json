@@ -8,7 +8,14 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "test": "tsx --test \"tests/**/*.test.ts\"",
-    "mock:stream": "tsx scripts/mock-streaming-producer.ts"
+    "mock:stream": "tsx scripts/mock-streaming-producer.ts",
+    "seed:dev": "tsx scripts/import-data.ts seed-dev",
+    "import:data": "tsx scripts/import-data.ts",
+    "bdg2:download": "tsx scripts/bdg2-download.ts",
+    "bdg2:import": "tsx scripts/bdg2-import.ts",
+    "nsrdb:fetch": "tsx scripts/nsrdb-fetch.ts",
+    "profiles:suggest": "tsx scripts/profiles.ts suggest",
+    "profiles:build": "tsx scripts/profiles.ts build"
   },
   "dependencies": {
     "amqplib": "^0.10.4",
