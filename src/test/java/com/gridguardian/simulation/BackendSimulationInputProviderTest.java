@@ -92,4 +92,63 @@ class BackendSimulationInputProviderTest {
                         .critical()
         );
     }
+    @Test
+void shouldUseBatteryAsAvailableByDefault() {
+
+    BackendHourlyData backendHour =
+            new BackendHourlyData(
+                    8,
+                    List.of(
+                            new BackendBuildingLoad(
+                                    "DORMITORY",
+                                    false,
+                                    20.0
+                            )
+                    ),
+                    5.0,
+                    true,
+                    2.0
+            );
+
+    BackendSimulationInputProvider provider =
+            new BackendSimulationInputProvider(
+                    List.of(backendHour)
+            );
+
+    HourlyInput input =
+            provider.loadInputs().get(0);
+
+    assertTrue(
+            input.batteryAvailable()
+    );
+}
+
+@Test
+void shouldRejectUnsupportedBuildingType() {
+
+    BackendHourlyData backendHour =
+            new BackendHourlyData(
+                    8,
+                    List.of(
+                            new BackendBuildingLoad(
+                                    "OFFICE",
+                                    false,
+                                    20.0
+                            )
+                    ),
+                    5.0,
+                    true,
+                    2.0
+            );
+
+    BackendSimulationInputProvider provider =
+            new BackendSimulationInputProvider(
+                    List.of(backendHour)
+            );
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+            IllegalArgumentException.class,
+            provider::loadInputs
+    );
+}
 }

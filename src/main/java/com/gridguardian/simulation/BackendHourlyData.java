@@ -39,4 +39,21 @@ public record BackendHourlyData(
 
         buildings = List.copyOf(buildings);
     }
+
+    public BackendHourlyData(
+            int hour,
+            List<BackendBuildingLoad> buildings,
+            double solarGenerationKwh,
+            boolean gridAvailable,
+            double gridPricePerKwh
+    ) {
+        this(
+                hour,
+                buildings,
+                solarGenerationKwh,
+                gridAvailable,
+                true,
+                gridPricePerKwh
+        );
+    }
 }
