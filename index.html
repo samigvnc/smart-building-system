@@ -11,7 +11,6 @@
     <style>
         :root {
             --bg-main: #1a1e16;
-            --grid-line: rgba(45, 53, 37, 0.4);
             --bg-header: #121510;
             --bg-box: rgba(22, 26, 19, 0.92);
             --bg-inset: #0d100b;
@@ -27,7 +26,6 @@
 
         body.light-mode {
             --bg-main: #e8ebe0;
-            --grid-line: rgba(110, 122, 88, 0.25);
             --bg-header: #d8ddd0;
             --bg-box: rgba(247, 248, 243, 0.95);
             --bg-inset: #dfe3d5;
@@ -43,10 +41,6 @@
 
         body {
             background-color: var(--bg-main);
-            background-image:
-                linear-gradient(var(--grid-line) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size: 20px 20px;
             color: var(--text-secondary);
             transition: background-color 0.2s ease, color 0.2s ease;
         }
@@ -80,7 +74,7 @@
         <h1 class="text-2xl font-black tracking-widest text-theme-accent uppercase">
             <span class="bracket-head">GRIDGUARDIAN</span>
         </h1>
-        <span class="text-xs reanimation-inset px-2 py-0.5 border font-bold">SYS//BACKEND_LINK</span>
+        <span class="text-xs reanimation-inset px-2 py-0.5 border font-bold">SYS//4-ZONE_LINK</span>
     </div>
 
     <!-- Stencil Navigation -->
@@ -106,9 +100,9 @@
     <section id="tab-telemetry" class="tab-content space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="reanimation-box p-5">
-                <h3 class="text-theme-muted text-xs font-bold uppercase tracking-widest">// NET_LOAD_DEMAND</h3>
-                <p class="text-3xl font-black text-theme-primary mt-2"><span id="loadDisplay">--</span> <span class="text-sm font-normal text-theme-accent">kW</span></p>
-                <span id="loadSubtext" class="text-[10px] text-theme-accent mt-1 block uppercase font-bold">API WAITING...</span>
+                <h3 class="text-theme-muted text-xs font-bold uppercase tracking-widest">// TOTAL_DEMAND</h3>
+                <p class="text-3xl font-black text-theme-primary mt-2"><span id="loadDisplay">--</span> <span class="text-sm font-normal text-theme-accent">kWh</span></p>
+                <span id="loadSubtext" class="text-[10px] text-theme-accent mt-1 block uppercase font-bold">WAITING FOR STEP...</span>
             </div>
             <div class="reanimation-box p-5">
                 <h3 class="text-theme-muted text-xs font-bold uppercase tracking-widest">// STORAGE_RESERVE</h3>
@@ -117,14 +111,14 @@
             </div>
             <div class="reanimation-box p-5">
                 <h3 class="text-theme-muted text-xs font-bold uppercase tracking-widest">// ROUTING_STRATEGY</h3>
-                <p id="algorithmBadge" class="text-3xl font-black text-theme-accent mt-2">BASIC / SMART</p>
-                <span id="algorithmSubtext" class="text-[10px] text-theme-muted mt-1 block uppercase font-bold">BACKEND DRIVEN</span>
+                <p id="algorithmBadge" class="text-2xl font-black text-theme-accent mt-2 break-words">BASIC / SMART</p>
+                <span id="algorithmSubtext" class="text-[10px] text-theme-muted mt-1 block uppercase font-bold">ACTIVE ENGINE MODE</span>
             </div>
         </div>
 
         <!-- Graph Area -->
         <div class="reanimation-box p-6">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-500/30 pb-3">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4 border-b border-slate-500/30 pb-3">
                 <h2 class="text-sm font-black text-theme-accent uppercase tracking-widest">
                     <span class="bracket-head">BACKEND_SIMULATION_FEED</span>
                 </h2>
@@ -140,45 +134,188 @@
 
     <!-- TAB 2: 4 BUILDINGS -->
     <section id="tab-subsystems" class="tab-content hidden space-y-6">
-        <h2 class="text-sm font-black text-amber-500 uppercase tracking-widest">// ZONE_DIAGNOSTICS (FROM BACKEND)</h2>
+        <h2 class="text-sm font-black text-amber-500 uppercase tracking-widest">// ZONE_DIAGNOSTICS (LABORATORY / LIBRARY / DORMITORIES / CAFETERIA)</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="buildingsContainer">
-            <!-- Dinamik olarak doldurulacak -->
             <div class="reanimation-box p-6">
                 <h3 class="font-black text-theme-primary uppercase">Veriler Bekleniyor...</h3>
-                <p class="text-xs text-theme-secondary mt-2">Lütfen simülasyon adımı çalıştırın.</p>
+                <p class="text-xs text-theme-secondary mt-2">Simülasyon adımı çalıştırdığınızda 4 bina dağıtımı burada görünecek.</p>
             </div>
         </div>
     </section>
 
-    <!-- TAB 3: SCENARIOS -->
+    <!-- TAB 3: SCENARIOS & FULL CUSTOM STRATEGY BUILDER -->
     <section id="tab-parameters" class="tab-content hidden space-y-6">
-        <h2 class="text-sm font-black text-amber-500 uppercase tracking-widest">// BACKEND_SCENARIO_PAYLOAD_CONFIG</h2>
-        <div class="reanimation-box p-6 max-w-2xl space-y-4">
-            <div>
-                <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">SELECT_STRATEGY</label>
-                <select id="strategySelect" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
-                    <option value="BASIC">BASIC (Güneş Fazlası & Batarya Şarj)</option>
-                    <option value="SMART" selected>SMART (Öncelikli Yük Atma / Fiyat Arbitrajı)</option>
-                </select>
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            <!-- Left: Environment & Scenario Config -->
+            <div class="xl:col-span-5 space-y-4">
+                <h2 class="text-sm font-black text-amber-500 uppercase tracking-widest">// ENVIRONMENT_&_SCENARIO_CONFIG</h2>
+                <div class="reanimation-box p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">ACTIVE_STRATEGY</label>
+                        <select id="strategySelect" onchange="onStrategyChange()" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
+                            <option value="BASIC">BASIC (Sıralı Solar / Batarya / Şebeke)</option>
+                            <option value="SMART" selected>SMART (Öncelikli Yük Atma / Fiyat Arbitrajı)</option>
+                        </select>
+                        <p id="activeCustomSummary" class="text-[10px] text-theme-accent mt-1 hidden"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">GRID AVAILABILITY</label>
+                        <select id="gridAvailableSelect" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
+                            <option value="true">Şebeke Aktif (Normal Çalışma)</option>
+                            <option value="false">Şebeke Kesik (Outage / Ada Modu)</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">SOLAR GEN (kWh)</label>
+                            <input type="number" step="0.1" id="solarInput" value="85.0" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">GRID PRICE ($/kWh)</label>
+                            <input type="number" step="0.01" id="priceInput" value="0.18" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <button onclick="executeBackendSimulation()" class="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase px-4 py-2 border border-black transition tracking-wider">
+                            RUN STEP (/simulate-step)
+                        </button>
+                        <button onclick="runComparisonScenario()" class="reanimation-inset hover:opacity-90 text-theme-accent font-black text-xs uppercase px-4 py-2 border border-amber-500 transition tracking-wider">
+                            RUN 24H REPORT (/run-scenario)
+                        </button>
+                    </div>
+                    <div id="scenarioReportBox" class="hidden reanimation-inset border p-4 text-xs space-y-1 mt-4"></div>
+                </div>
             </div>
-            <div>
-                <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">GRID AVAILABILITY</label>
-                <select id="gridAvailableSelect" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
-                    <option value="true">Şebeke Aktif (Normal Çalışma)</option>
-                    <option value="false">Şebeke Kesik (Islanding / Ada Modu)</option>
-                </select>
+
+            <!-- Right: Full Custom Strategy Builder -->
+            <div class="xl:col-span-7 space-y-4">
+                <h2 class="text-sm font-black text-amber-500 uppercase tracking-widest">// FULL_CUSTOM_STRATEGY_BUILDER (NO BASIC/SMART LOCK)</h2>
+                <div class="reanimation-box p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">STRATEGY_NAME</label>
+                            <input type="text" id="customNameInput" placeholder="Örn: NIGHT_ARBITRAGE_V1" class="w-full reanimation-inset border px-3 py-2 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">CHEAP_PRICE ($/kWh)</label>
+                            <input type="number" step="0.01" min="0" id="customPriceThreshold" value="0.14" class="w-full reanimation-inset border px-3 py-2 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">SOLAR_MULT (%)</label>
+                            <input type="number" step="5" min="0" max="250" id="customSolarMult" value="100" class="w-full reanimation-inset border px-3 py-2 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">INIT_BATTERY (kWh)</label>
+                            <input type="number" step="1" min="0" id="customInitBattery" value="60" class="w-full reanimation-inset border px-3 py-2 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">MAX_BATTERY (kWh)</label>
+                            <input type="number" step="1" min="1" id="customMaxBattery" value="120" class="w-full reanimation-inset border px-3 py-2 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">MIN_RESERVE (%)</label>
+                            <input type="number" step="1" min="0" max="100" id="customMinReserve" value="25" class="w-full reanimation-inset border px-3 py-2 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <!-- Building Demand Scales (%) -->
+                    <div class="border-t border-slate-500/30 pt-3">
+                        <p class="text-[11px] font-bold text-theme-accent uppercase mb-2">BUILDING_DEMAND_SCALE (%)</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-theme-secondary mb-1 uppercase">LABORATORY</label>
+                                <input type="number" step="5" min="0" max="200" id="scaleLab" value="100" class="w-full reanimation-inset border px-2 py-1.5 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-theme-secondary mb-1 uppercase">LIBRARY</label>
+                                <input type="number" step="5" min="0" max="200" id="scaleLib" value="100" class="w-full reanimation-inset border px-2 py-1.5 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-theme-secondary mb-1 uppercase">DORMITORIES</label>
+                                <input type="number" step="5" min="0" max="200" id="scaleDorm" value="80" class="w-full reanimation-inset border px-2 py-1.5 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-theme-secondary mb-1 uppercase">CAFETERIA</label>
+                                <input type="number" step="5" min="0" max="200" id="scaleCaf" value="90" class="w-full reanimation-inset border px-2 py-1.5 text-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Building Priority Order (1 = Highest Priority) -->
+                    <div class="border-t border-slate-500/30 pt-3">
+                        <p class="text-[11px] font-bold text-theme-accent uppercase mb-2">DISPATCH_PRIORITY_RANK (1 = FIRST SERVED)</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-theme-secondary mb-1 uppercase">LABORATORY</label>
+                                <select id="prioLab" class="w-full reanimation-inset border px-2 py-1.5 text-xs">
+                                    <option value="1" selected>1 (Highest)</option>
+                                    <option value="2">2 (High)</option>
+                                    <option value="3">3 (Medium)</option>
+                                    <option value="4">4 (Lowest)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-theme-secondary mb-1 uppercase">LIBRARY</label>
+                                <select id="prioLib" class="w-full reanimation-inset border px-2 py-1.5 text-xs">
+                                    <option value="1">1 (Highest)</option>
+                                    <option value="2" selected>2 (High)</option>
+                                    <option value="3">3 (Medium)</option>
+                                    <option value="4">4 (Lowest)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-theme-secondary mb-1 uppercase">DORMITORIES</label>
+                                <select id="prioDorm" class="w-full reanimation-inset border px-2 py-1.5 text-xs">
+                                    <option value="1">1 (Highest)</option>
+                                    <option value="2">2 (High)</option>
+                                    <option value="3">3 (Medium)</option>
+                                    <option value="4" selected>4 (Lowest)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-theme-secondary mb-1 uppercase">CAFETERIA</label>
+                                <select id="prioCaf" class="w-full reanimation-inset border px-2 py-1.5 text-xs">
+                                    <option value="1">1 (Highest)</option>
+                                    <option value="2">2 (High)</option>
+                                    <option value="3" selected>3 (Medium)</option>
+                                    <option value="4">4 (Lowest)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Behavior Flags -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-slate-500/30 pt-3 text-xs">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="customProtectBatteryCheap" checked class="accent-amber-500">
+                            <span>Ucuz elektrikte bataryayı koru (Arbitraj)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="customAllowLoadShedding" checked class="accent-amber-500">
+                            <span>Enerji yetmezse düşük öncelikli binada yük at</span>
+                        </label>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <button onclick="saveCustomStrategy()" class="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase px-4 py-2 border border-black transition tracking-wider">
+                            SAVE_CUSTOM_STRATEGY
+                        </button>
+                        <button onclick="deleteSelectedCustomStrategy()" class="reanimation-inset hover:opacity-90 text-red-500 font-black text-xs uppercase px-4 py-2 border border-red-500/50 transition tracking-wider">
+                            DELETE_SELECTED
+                        </button>
+                    </div>
+
+                    <div class="border-t border-slate-500/30 pt-3">
+                        <p class="text-[10px] font-bold text-theme-muted uppercase mb-2">SAVED_CUSTOM_STRATEGIES:</p>
+                        <div id="savedCustomList" class="space-y-1.5 text-xs">
+                            <p class="text-theme-muted text-[11px]">Henüz kayıtlı özel strateji yok.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">SOLAR GENERATION (kWh)</label>
-                <input type="number" id="solarInput" value="85.0" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-theme-secondary mb-1 uppercase">GRID ELECTRICITY PRICE ($/kWh)</label>
-                <input type="number" step="0.01" id="priceInput" value="0.18" class="w-full reanimation-inset border px-4 py-2 text-xs focus:outline-none focus:border-amber-500">
-            </div>
-            <button onclick="executeBackendSimulation()" class="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase px-4 py-2 border border-black transition tracking-wider">
-                SEND TO /api/energy/simulate-step
-            </button>
         </div>
     </section>
 
@@ -190,7 +327,7 @@
         </div>
         <div id="logConsole" class="reanimation-box p-4 space-y-2 text-xs max-h-96 overflow-y-auto">
             <div class="p-2 reanimation-inset border text-theme-muted">
-                <span class="text-theme-accent font-bold">[INIT]</span> Frontend initialized. Connecting to backend at http://localhost:5000...
+                <span class="text-theme-accent font-bold">[INIT]</span> Frontend initialized. Target backend: http://localhost:5000
             </div>
         </div>
     </section>
@@ -199,208 +336,603 @@
 
 <!-- Footer -->
 <footer class="reanimation-header border-t-4 text-center py-4 text-[10px] text-theme-muted uppercase tracking-widest font-bold">
-    GRIDGUARDIAN ENERGY MESH // BACKEND INTEGRATED &copy; 2026
+    GRIDGUARDIAN ENERGY MESH // 4-ZONE CUSTOM ENGINE &copy; 2026
 </footer>
 
-<!-- Interactive Scripts & Backend Integration -->
 <script>
-    const API_BASE = "http://localhost:5000";
-    let isLightMode = false;
+    (function () {
+        const API_BASE = "http://localhost:5000";
+        const STORAGE_KEY = "gridguardian_custom_strategies_v2";
+        let isLightMode = false;
+        let telemetryChart = null;
 
-    // Sayfa açıldığında Health Check yap
-    window.addEventListener("DOMContentLoaded", () => {
-        checkBackendHealth();
-    });
+        window.addEventListener("DOMContentLoaded", function () {
+            initChart();
+            checkBackendHealth();
+            renderCustomStrategies();
+        });
 
-    async function checkBackendHealth() {
-        try {
-            const res = await fetch(`${API_BASE}/api/health`);
-            if (res.ok) {
-                document.getElementById('healthIndicator').className = "h-4 w-4 bg-emerald-500 border border-black";
-                document.getElementById('systemStatusBadge').innerText = "ONLINE_CONNECTED";
-                appendLog("SUCCESS", "Connected to backend successfully via /api/health");
-            } else {
-                throw new Error("Bad response");
-            }
-        } catch (err) {
-            document.getElementById('healthIndicator').className = "h-4 w-4 bg-red-500 border border-black animate-pulse";
-            document.getElementById('systemStatusBadge').innerText = "OFFLINE_STANDALONE";
-            appendLog("ERROR", "Could not connect to backend at " + API_BASE + ". Make sure backend is running.");
-        }
-    }
-
-    async function executeBackendSimulation() {
-        const strategy = document.getElementById('strategySelect').value;
-        const isGridAvailable = document.getElementById('gridAvailableSelect').value === "true";
-        const solarGenerationKWh = parseFloat(document.getElementById('solarInput').value);
-        const gridElectricityPrice = parseFloat(document.getElementById('priceInput').value);
-
-        const payload = {
-            strategy: strategy,
-            environment: {
-                timestamp: new Date().toISOString(),
-                solarGenerationKWh: solarGenerationKWh,
-                isGridAvailable: isGridAvailable,
-                gridElectricityPrice: gridElectricityPrice,
-                priceThresholdCheap: 0.15,
-                battery: {
-                    currentCapacityKWh: 30.0,
-                    maxCapacityKWh: 100.0,
-                    minReservePercent: 20
+        function initChart() {
+            const canvas = document.getElementById("telemetryChart");
+            if (!canvas || typeof Chart === "undefined") return;
+            const ctx = canvas.getContext("2d");
+            telemetryChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: ["12:00", "12:05", "12:10", "12:15", "12:20"],
+                    datasets: [{
+                        label: "Total Demand (kWh)",
+                        data: [96.0, 96.0, 96.0, 96.0, 96.0],
+                        borderColor: "#f59e0b",
+                        backgroundColor: "rgba(245, 158, 11, 0.1)",
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 5,
+                        pointBackgroundColor: "#f59e0b",
+                        pointBorderColor: "#000000"
+                    }]
                 },
-                buildings: [
-                    { id: "b1", name: "Biyoteknoloji Laboratuvarı", type: "LABORATORY", isCritical: true, demandKWh: 25 },
-                    { id: "b2", name: "Merkez Kütüphane", type: "LIBRARY", isCritical: true, demandKWh: 15 },
-                    { id: "b3", name: "Öğrenci Yurdu A Blok", type: "DORMITORY", isCritical: false, demandKWh: 30 }
-                ]
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: "rgba(74, 84, 56, 0.4)" }, ticks: { color: "#7a8563", font: { family: "monospace", size: 10 } } },
+                        y: { min: 0, max: 200, grid: { color: "rgba(74, 84, 56, 0.4)" }, ticks: { color: "#7a8563", font: { family: "monospace", size: 10 } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+            window.telemetryChart = telemetryChart;
+        }
+
+        function getCustomStrategies() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function setCustomStrategies(list) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+            } catch (e) {
+                appendLog("ERROR", "localStorage kayıt hatası: " + e.message);
+            }
+        }
+
+        window.saveCustomStrategy = function () {
+            const rawName = document.getElementById("customNameInput").value.trim();
+            if (!rawName) {
+                appendLog("ERROR", "Lütfen özel strateji için bir isim girin.");
+                return;
+            }
+
+            const maxBatteryKWh = Math.max(1, parseFloat(document.getElementById("customMaxBattery").value) || 120);
+            const initBatteryKWh = Math.min(maxBatteryKWh, Math.max(0, parseFloat(document.getElementById("customInitBattery").value) || 60));
+
+            const strategyObj = {
+                id: rawName.toUpperCase().replace(/\s+/g, "_"),
+                name: rawName.toUpperCase(),
+                priceThresholdCheap: Math.max(0, parseFloat(document.getElementById("customPriceThreshold").value) || 0.15),
+                solarMultiplierPercent: Math.max(0, parseFloat(document.getElementById("customSolarMult").value) || 100),
+                initBatteryKWh,
+                maxBatteryKWh,
+                minReservePercent: Math.min(100, Math.max(0, parseFloat(document.getElementById("customMinReserve").value) || 20)),
+                protectBatteryCheap: document.getElementById("customProtectBatteryCheap").checked,
+                allowLoadShedding: document.getElementById("customAllowLoadShedding").checked,
+                scales: {
+                    lab: Math.max(0, parseFloat(document.getElementById("scaleLab").value) || 100),
+                    lib: Math.max(0, parseFloat(document.getElementById("scaleLib").value) || 100),
+                    dorm: Math.max(0, parseFloat(document.getElementById("scaleDorm").value) || 100),
+                    caf: Math.max(0, parseFloat(document.getElementById("scaleCaf").value) || 100)
+                },
+                priorities: {
+                    lab: parseInt(document.getElementById("prioLab").value, 10) || 1,
+                    lib: parseInt(document.getElementById("prioLib").value, 10) || 2,
+                    caf: parseInt(document.getElementById("prioCaf").value, 10) || 3,
+                    dorm: parseInt(document.getElementById("prioDorm").value, 10) || 4
+                }
+            };
+
+            const current = getCustomStrategies().filter(item => item.id !== strategyObj.id);
+            current.push(strategyObj);
+            setCustomStrategies(current);
+
+            document.getElementById("customNameInput").value = "";
+            renderCustomStrategies("CUSTOM:" + strategyObj.id);
+            appendLog("SUCCESS", `Özel strateji kaydedildi: ${strategyObj.name} (Rezerv %${strategyObj.minReservePercent}, Fiyat ≤ $${strategyObj.priceThresholdCheap}, Solar %${strategyObj.solarMultiplierPercent})`);
+        };
+
+        window.deleteSelectedCustomStrategy = function () {
+            const select = document.getElementById("strategySelect");
+            if (!select.value.startsWith("CUSTOM:")) {
+                appendLog("ERROR", "Silmek için kayıtlı bir CUSTOM strateji seçin.");
+                return;
+            }
+            const targetId = select.value.replace("CUSTOM:", "");
+            const updated = getCustomStrategies().filter(s => s.id !== targetId);
+            setCustomStrategies(updated);
+            renderCustomStrategies("SMART");
+            appendLog("INFO", `Özel strateji silindi: ${targetId}`);
+        };
+
+        window.selectCustomById = function (id) {
+            document.getElementById("strategySelect").value = "CUSTOM:" + id;
+            onStrategyChange();
+            appendLog("INFO", `Aktif strateji seçildi: CUSTOM // ${id}`);
+        };
+
+        function renderCustomStrategies(selectValueAfter) {
+            const select = document.getElementById("strategySelect");
+            const listContainer = document.getElementById("savedCustomList");
+            const strategies = getCustomStrategies();
+
+            const prev = selectValueAfter || select.value;
+            select.innerHTML = `
+                <option value="BASIC">BASIC (Sıralı Solar / Batarya / Şebeke)</option>
+                <option value="SMART">SMART (Öncelikli Yük Atma / Fiyat Arbitrajı)</option>
+            `;
+
+            strategies.forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = "CUSTOM:" + s.id;
+                opt.textContent = `CUSTOM // ${s.name}`;
+                select.appendChild(opt);
+            });
+
+            const exists = Array.from(select.options).some(o => o.value === prev);
+            select.value = exists ? prev : "SMART";
+
+            if (strategies.length === 0) {
+                listContainer.innerHTML = `<p class="text-theme-muted text-[11px]">Henüz kayıtlı özel strateji yok.</p>`;
+            } else {
+                listContainer.innerHTML = strategies.map(s => `
+                    <div class="flex justify-between items-center p-2 reanimation-inset border text-[11px]">
+                        <div>
+                            <span class="text-theme-accent font-bold">${s.name}</span>
+                            <span class="text-theme-muted"> (≤$${s.priceThresholdCheap} | Rezerv %${s.minReservePercent} | Solar %${s.solarMultiplierPercent} | Shed: ${s.allowLoadShedding ? "ON" : "OFF"})</span>
+                        </div>
+                        <button onclick="selectCustomById('${s.id}')" class="px-2 py-0.5 bg-amber-500 text-black font-bold uppercase text-[10px]">USE</button>
+                    </div>
+                `).join("");
+            }
+
+            onStrategyChange();
+        }
+
+        function getActiveCustomStrategy() {
+            const val = document.getElementById("strategySelect").value;
+            if (!val.startsWith("CUSTOM:")) return null;
+            const id = val.replace("CUSTOM:", "");
+            return getCustomStrategies().find(s => s.id === id) || null;
+        }
+
+        window.onStrategyChange = function () {
+            const custom = getActiveCustomStrategy();
+            const summaryEl = document.getElementById("activeCustomSummary");
+            if (custom) {
+                summaryEl.classList.remove("hidden");
+                summaryEl.textContent = `Bağımsız Custom Motor: ${custom.name} | Fiyat Eşiği ≤ $${custom.priceThresholdCheap} | Rezerv %${custom.minReservePercent} | Öncelik: Lab(${custom.priorities.lab}), Lib(${custom.priorities.lib}), Caf(${custom.priorities.caf}), Dorm(${custom.priorities.dorm})`;
+            } else {
+                summaryEl.classList.add("hidden");
+                summaryEl.textContent = "";
             }
         };
 
-        appendLog("INFO", `Sending POST request to /api/energy/simulate-step [Strategy: ${strategy}]...`);
+        function runCustomEngine(custom, env) {
+            const notes = [];
+            const adjustedSolar = Number((env.solarGenerationKWh * (custom.solarMultiplierPercent / 100)).toFixed(2));
+            const totalDemand = Number(env.buildings.reduce((sum, b) => sum + b.demandKWh, 0).toFixed(2));
+            const minReserveKWh = (custom.maxBatteryKWh * custom.minReservePercent) / 100;
+            const isCheap = env.gridElectricityPrice <= custom.priceThresholdCheap;
 
-        try {
-            const response = await fetch(`${API_BASE}/api/energy/simulate-step`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+            let currentBattery = custom.initBatteryKWh;
+            let remainingDemand = totalDemand;
+            let solarUsed = 0;
+            let batteryCharged = 0;
+            let batteryDischarged = 0;
+            let gridImport = 0;
+            let unservedEnergy = 0;
+
+            notes.push(`[Custom:${custom.name}] Talep: ${totalDemand} kWh, Efektif Solar: ${adjustedSolar} kWh, Fiyat: ${env.gridElectricityPrice} $/kWh (Eşik: ${custom.priceThresholdCheap})`);
+
+            if (adjustedSolar >= remainingDemand) {
+                solarUsed = remainingDemand;
+                const surplus = adjustedSolar - remainingDemand;
+                remainingDemand = 0;
+                const space = Math.max(0, custom.maxBatteryKWh - currentBattery);
+                batteryCharged = Math.min(surplus, space);
+                currentBattery += batteryCharged;
+                notes.push(`[Custom:${custom.name}] Güneş tüm talebi karşıladı, ${batteryCharged.toFixed(2)} kWh bataryaya aktarıldı.`);
+            } else {
+                solarUsed = adjustedSolar;
+                remainingDemand -= solarUsed;
+
+                if (env.isGridAvailable && isCheap && custom.protectBatteryCheap) {
+                    gridImport = remainingDemand;
+                    remainingDemand = 0;
+                    notes.push(`[Custom:${custom.name}] Ucuz şebeke aktif; batarya korunarak ${gridImport.toFixed(2)} kWh şebekeden çekildi.`);
+                } else {
+                    const floorKWh = env.isGridAvailable ? minReserveKWh : 0;
+                    const availableBattery = Math.max(0, currentBattery - floorKWh);
+                    if (availableBattery > 0) {
+                        batteryDischarged = Math.min(remainingDemand, availableBattery);
+                        remainingDemand -= batteryDischarged;
+                        currentBattery -= batteryDischarged;
+                        notes.push(`[Custom:${custom.name}] Bataryadan ${batteryDischarged.toFixed(2)} kWh çekildi.`);
+                    }
+                    if (remainingDemand > 0 && env.isGridAvailable) {
+                        gridImport = remainingDemand;
+                        remainingDemand = 0;
+                        notes.push(`[Custom:${custom.name}] Kalan ${gridImport.toFixed(2)} kWh şebekeden karşılandı.`);
+                    }
+                }
+            }
+
+            let allocations = [];
+            if (remainingDemand > 0) {
+                unservedEnergy = remainingDemand;
+                notes.push(`[Custom:${custom.name}] ${unservedEnergy.toFixed(2)} kWh açık oluştu. Yük Atma: ${custom.allowLoadShedding ? "AKTİF" : "PASİF"}`);
+
+                if (custom.allowLoadShedding) {
+                    let pool = solarUsed + batteryDischarged + gridImport;
+                    const sorted = [...env.buildings].sort((a, b) => a.priority - b.priority);
+                    allocations = sorted.map(bld => {
+                        if (pool >= bld.demandKWh) {
+                            pool -= bld.demandKWh;
+                            return {
+                                buildingId: bld.id,
+                                buildingName: bld.name,
+                                type: bld.type,
+                                requestedKWh: bld.demandKWh,
+                                allocatedKWh: Number(bld.demandKWh.toFixed(2)),
+                                unservedKWh: 0,
+                                isShedded: false
+                            };
+                        }
+                        const alloc = Math.max(0, pool);
+                        pool = 0;
+                        const unserved = Math.max(0, Number((bld.demandKWh - alloc).toFixed(2)));
+                        return {
+                            buildingId: bld.id,
+                            buildingName: bld.name,
+                            type: bld.type,
+                            requestedKWh: bld.demandKWh,
+                            allocatedKWh: Number(alloc.toFixed(2)),
+                            unservedKWh: unserved,
+                            isShedded: unserved > 0.01
+                        };
+                    });
+                } else {
+                    const totalReq = totalDemand > 0 ? totalDemand : 1;
+                    const totalAvail = solarUsed + batteryDischarged + gridImport;
+                    const ratio = Math.min(1, totalAvail / totalReq);
+                    allocations = env.buildings.map(bld => {
+                        const alloc = Number((bld.demandKWh * ratio).toFixed(2));
+                        const unserved = Number(Math.max(0, bld.demandKWh - alloc).toFixed(2));
+                        return {
+                            buildingId: bld.id,
+                            buildingName: bld.name,
+                            type: bld.type,
+                            requestedKWh: bld.demandKWh,
+                            allocatedKWh: alloc,
+                            unservedKWh: unserved,
+                            isShedded: unserved > 0.01
+                        };
+                    });
+                }
+            } else {
+                allocations = env.buildings.map(bld => ({
+                    buildingId: bld.id,
+                    buildingName: bld.name,
+                    type: bld.type,
+                    requestedKWh: bld.demandKWh,
+                    allocatedKWh: Number(bld.demandKWh.toFixed(2)),
+                    unservedKWh: 0,
+                    isShedded: false
+                }));
+            }
+
+            return {
+                timestamp: env.timestamp,
+                strategyUsed: `CUSTOM:${custom.name}`,
+                totalDemandKWh: totalDemand,
+                solarUsedKWh: Number(solarUsed.toFixed(2)),
+                batteryChargedKWh: Number(batteryCharged.toFixed(2)),
+                batteryDischargedKWh: Number(batteryDischarged.toFixed(2)),
+                gridImportKWh: Number(gridImport.toFixed(2)),
+                unservedEnergyKWh: Number(unservedEnergy.toFixed(2)),
+                finalBatteryCapacityKWh: Number(currentBattery.toFixed(2)),
+                finalBatteryPercentage: Number(((currentBattery / custom.maxBatteryKWh) * 100).toFixed(1)),
+                allocations,
+                notes
+            };
+        }
+
+        function buildFourBuildings(custom, jitter) {
+            const sLab = custom ? custom.scales.lab / 100 : 1;
+            const sLib = custom ? custom.scales.lib / 100 : 1;
+            const sDorm = custom ? custom.scales.dorm / 100 : 1;
+            const sCaf = custom ? custom.scales.caf / 100 : 1;
+
+            const pLab = custom ? custom.priorities.lab : 1;
+            const pLib = custom ? custom.priorities.lib : 2;
+            const pCaf = custom ? custom.priorities.caf : 3;
+            const pDorm = custom ? custom.priorities.dorm : 4;
+
+            return [
+                {
+                    id: "bld-lab-01",
+                    name: "Laboratuvar",
+                    type: "LABORATORY",
+                    isCritical: true,
+                    priority: pLab,
+                    demandKWh: Math.max(2, Math.round((28 + jitter) * sLab))
+                },
+                {
+                    id: "bld-lib-01",
+                    name: "Merkez Kütüphane",
+                    type: "LIBRARY",
+                    isCritical: true,
+                    priority: pLib,
+                    demandKWh: Math.max(2, Math.round((18 - Math.round(jitter / 2)) * sLib))
+                },
+                {
+                    id: "bld-dorm-01",
+                    name: "Öğrenci Yurtları",
+                    type: "DORMITORY",
+                    isCritical: false,
+                    priority: pDorm,
+                    demandKWh: Math.max(2, Math.round((32 + jitter) * sDorm))
+                },
+                {
+                    id: "bld-caf-01",
+                    name: "Yemekhane",
+                    type: "DORMITORY",
+                    isCritical: false,
+                    priority: pCaf,
+                    demandKWh: Math.max(2, Math.round((20 + Math.round(jitter / 2)) * sCaf))
+                }
+            ];
+        }
+
+        async function checkBackendHealth() {
+            try {
+                const res = await fetch(`${API_BASE}/api/health`);
+                if (!res.ok) throw new Error("Health status: " + res.status);
+                document.getElementById("healthIndicator").className = "h-4 w-4 bg-emerald-500 border border-black";
+                document.getElementById("systemStatusBadge").innerText = "ONLINE_CONNECTED";
+                appendLog("SUCCESS", "Backend bağlantısı doğrulandı (/api/health).");
+            } catch (err) {
+                document.getElementById("healthIndicator").className = "h-4 w-4 bg-red-500 border border-black animate-pulse";
+                document.getElementById("systemStatusBadge").innerText = "OFFLINE";
+                appendLog("ERROR", "Backend erişilemiyor: " + err.message);
+            }
+        }
+
+        window.executeBackendSimulation = async function () {
+            const custom = getActiveCustomStrategy();
+            const isGridAvailable = document.getElementById("gridAvailableSelect").value === "true";
+            const solarGenerationKWh = parseFloat(document.getElementById("solarInput").value) || 0;
+            const gridElectricityPrice = parseFloat(document.getElementById("priceInput").value) || 0;
+            const jitter = Math.round((Math.random() - 0.5) * 14);
+
+            const buildings = buildFourBuildings(custom, jitter);
+            const env = {
+                timestamp: new Date().toISOString(),
+                solarGenerationKWh,
+                isGridAvailable,
+                gridElectricityPrice,
+                priceThresholdCheap: custom ? custom.priceThresholdCheap : 0.15,
+                battery: {
+                    currentCapacityKWh: custom ? custom.initBatteryKWh : 60.0,
+                    maxCapacityKWh: custom ? custom.maxBatteryKWh : 120.0,
+                    minReservePercent: custom ? custom.minReservePercent : 20
+                },
+                buildings: buildings.map(({ priority, ...rest }) => rest)
+            };
+
+            if (custom) {
+                const customEnv = { ...env, buildings };
+                const decision = runCustomEngine(custom, customEnv);
+                appendLog("SUCCESS", `Bağımsız Custom Strateji çalıştırıldı: ${custom.name}`);
+                decision.notes.forEach(n => appendLog("INFO", n));
+                updateUIFromDecision(decision, `CUSTOM // ${custom.name}`);
+
+                try {
+                    const backendPayload = {
+                        strategy: "SMART",
+                        environment: env
+                    };
+                    const resp = await fetch(`${API_BASE}/api/energy/simulate-step`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(backendPayload)
+                    });
+                    if (resp.ok) {
+                        appendLog("INFO", "Backend senkronizasyon kaydı gönderildi (/api/energy/simulate-step).");
+                    }
+                } catch (e) {
+                    appendLog("INFO", "Backend offline; karar yalnızca Custom Engine üzerinden üretildi.");
+                }
+                return;
+            }
+
+            const strategy = document.getElementById("strategySelect").value;
+            const payload = { strategy, environment: env };
+            appendLog("INFO", `POST /api/energy/simulate-step [${strategy}] gönderiliyor...`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/energy/simulate-step`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const json = await response.json();
+                if (!response.ok || !json.success) {
+                    throw new Error(json.message || "Simülasyon isteği başarısız.");
+                }
+                const decision = json.data;
+                appendLog("SUCCESS", `Adım tamamlandı [${strategy}] (DB Kayıt: ${json.persisted ? "OK" : "OFFLINE/SKIPPED"}).`);
+                if (Array.isArray(decision.notes)) {
+                    decision.notes.forEach(note => appendLog("INFO", note));
+                }
+                updateUIFromDecision(decision, strategy);
+            } catch (err) {
+                appendLog("ERROR", "İstek hatası: " + err.message);
+            }
+        };
+
+        window.runComparisonScenario = async function () {
+            const isGridAvailable = document.getElementById("gridAvailableSelect").value === "true";
+            const gridElectricityPrice = parseFloat(document.getElementById("priceInput").value) || 0.18;
+
+            const payload = {
+                scenarioName: "24-Saatlik Kampüs Kesinti ve Fiyat Arbitrajı",
+                durationHours: 24,
+                gridOutageStartHour: isGridAvailable ? undefined : 18,
+                gridOutageDurationHours: isGridAvailable ? undefined : 3,
+                cloudyDayFactor: 0.85,
+                batteryCapacityKWh: 120,
+                initialBatteryKWh: 60,
+                priceModel: gridElectricityPrice <= 0.15 ? "FLAT" : "TIME_OF_USE",
+                saveToDatabase: false
+            };
+
+            appendLog("INFO", "POST /api/energy/run-scenario başlatıldı...");
+            try {
+                const response = await fetch(`${API_BASE}/api/energy/run-scenario`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const json = await response.json();
+                if (!response.ok || !json.success) {
+                    throw new Error(json.message || "Senaryo raporu alınamadı.");
+                }
+                const report = json.report;
+                const box = document.getElementById("scenarioReportBox");
+                box.classList.remove("hidden");
+                box.innerHTML = `
+                    <p class="font-black text-theme-accent uppercase">${report.scenarioName}</p>
+                    <p class="text-theme-secondary mt-1">${report.summaryVerdict}</p>
+                    <p class="text-theme-muted mt-1">Smart Maliyet: $${report.smartStrategyReport.totalElectricityCostUSD} | Basic Maliyet: $${report.basicStrategyReport.totalElectricityCostUSD}</p>
+                `;
+                appendLog("SUCCESS", `Senaryo raporu alındı: ${report.summaryVerdict}`);
+            } catch (err) {
+                appendLog("ERROR", "Senaryo hatası: " + err.message);
+            }
+        };
+
+        function updateUIFromDecision(decision, displayLabel) {
+            const totalDemand = Number(decision.totalDemandKWh ?? 0);
+            const batteryPct = Number(decision.finalBatteryPercentage ?? 0);
+            const solarUsed = Number(decision.solarUsedKWh ?? 0);
+            const gridImport = Number(decision.gridImportKWh ?? 0);
+            const unserved = Number(decision.unservedEnergyKWh ?? 0);
+
+            document.getElementById("loadDisplay").innerText = totalDemand.toFixed(1);
+            document.getElementById("loadSubtext").innerText =
+                `SOLAR: ${solarUsed.toFixed(1)} | GRID: ${gridImport.toFixed(1)} | UNSERVED: ${unserved.toFixed(1)}`;
+            document.getElementById("batteryDisplay").innerText = batteryPct.toFixed(1);
+            document.getElementById("batterySubtext").innerText =
+                `CAPACITY: ${Number(decision.finalBatteryCapacityKWh ?? 0).toFixed(1)} kWh`;
+            document.getElementById("algorithmBadge").innerText = displayLabel || decision.strategyUsed || "SMART";
+            document.getElementById("systemStatusBadge").innerText = "SYNCED_OK";
+
+            if (telemetryChart) {
+                const timeLabel = new Date().toTimeString().split(" ")[0];
+                if (telemetryChart.data.labels.length >= 8) {
+                    telemetryChart.data.labels.shift();
+                    telemetryChart.data.datasets[0].data.shift();
+                }
+                telemetryChart.data.labels.push(timeLabel);
+                telemetryChart.data.datasets[0].data.push(totalDemand);
+                telemetryChart.update();
+            }
+
+            const container = document.getElementById("buildingsContainer");
+            container.innerHTML = "";
+
+            const allocations = Array.isArray(decision.allocations) ? decision.allocations : [];
+            allocations.forEach(b => {
+                const statusText = b.isShedded ? "SHEDDED" : "POWERED";
+                const badgeStyle = b.isShedded ? "bg-red-500 text-white" : "bg-amber-500 text-black";
+
+                container.innerHTML += `
+                    <div class="reanimation-box p-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-black text-theme-primary uppercase">${b.buildingName}</h3>
+                            <span class="px-2 py-0.5 text-[10px] ${badgeStyle} font-bold uppercase">${statusText}</span>
+                        </div>
+                        <p class="text-xs text-theme-secondary mt-2">
+                            TYPE: ${b.type} | REQ: ${b.requestedKWh} kWh | ALLOC: ${b.allocatedKWh} kWh | UNSERVED: ${b.unservedKWh} kWh
+                        </p>
+                    </div>
+                `;
             });
 
-            if (!response.ok) throw new Error("Backend simulation error status: " + response.status);
-
-            const data = await response.json();
-            appendLog("SUCCESS", "Simulation step executed successfully from backend response.");
-
-            // Gelen gerçek verileri arayüze ve grafiğe yansıt
-            updateUIFromBackend(data, strategy, solarGenerationKWh);
-
-        } catch (err) {
-            appendLog("ERROR", "API request failed: " + err.message + ". Check if backend CORS or server is active.");
+            switchTab("telemetry");
         }
-    }
 
-    function updateUIFromBackend(data, strategy, solar) {
-        // Örnek veri işleme (backend'in döneceği yapıya göre esnektir)
-        const totalLoad = data.totalDemandKWh || (solar * 0.8) || 75.5;
-        const batteryLevel = data.batterySocPercent || 74.5;
+        function appendLog(type, text) {
+            const logConsole = document.getElementById("logConsole");
+            if (!logConsole) return;
+            const time = new Date().toTimeString().split(" ")[0];
+            let colorClass = "text-theme-muted";
+            if (type === "SUCCESS") colorClass = "text-theme-accent font-bold";
+            if (type === "ERROR") colorClass = "text-red-500 font-bold";
 
-        document.getElementById('loadDisplay').innerText = totalLoad.toFixed(1);
-        document.getElementById('batteryDisplay').innerText = batteryLevel.toFixed(1);
-        document.getElementById('algorithmBadge').innerText = strategy;
-        document.getElementById('systemStatusBadge').innerText = "SYNCED_OK";
-
-        // Grafiğe yeni veri ekle
-        const timeLabel = new Date().toTimeString().split(' ')[0];
-        if (telemetryChart.data.labels.length >= 8) {
-            telemetryChart.data.labels.shift();
-            telemetryChart.data.datasets[0].data.shift();
+            logConsole.innerHTML += `<div class="p-2 reanimation-inset border ${colorClass}">
+                <span>[${time}] [${type}]</span> ${text}
+            </div>`;
+            logConsole.scrollTop = logConsole.scrollHeight;
         }
-        telemetryChart.data.labels.push(timeLabel);
-        telemetryChart.data.datasets[0].data.push(totalLoad);
-        telemetryChart.update();
 
-        // 4 Bina / Bölge sekmesini güncelle
-        const container = document.getElementById('buildingsContainer');
-        container.innerHTML = "";
+        window.toggleTheme = function () {
+            isLightMode = !isLightMode;
+            document.body.classList.toggle("light-mode", isLightMode);
+            document.getElementById("themeToggleBtn").innerText = isLightMode ? "[DARK_MODE]" : "[LIGHT_MODE]";
 
-        const buildings = data.buildings || [
-            { name: "Biyoteknoloji Laboratuvarı", isCritical: true, demandKWh: 25, status: "POWERED" },
-            { name: "Merkez Kütüphane", isCritical: true, demandKWh: 15, status: "POWERED" },
-            { name: "Öğrenci Yurdu A Blok", isCritical: false, demandKWh: 30, status: "SHEDDED/OPTIMIZED" }
-        ];
+            if (telemetryChart) {
+                const gridColor = isLightMode ? "rgba(92, 102, 71, 0.25)" : "rgba(74, 84, 56, 0.4)";
+                const tickColor = isLightMode ? "#525c40" : "#7a8563";
+                const lineColor = isLightMode ? "#d97706" : "#f59e0b";
 
-        buildings.forEach(b => {
-            container.innerHTML += `
-                <div class="reanimation-box p-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-black text-theme-primary uppercase">${b.name}</h3>
-                        <span class="px-2 py-0.5 text-[10px] bg-amber-500 text-black font-bold uppercase">${b.status || (b.isCritical ? 'CRITICAL' : 'FLEXIBLE')}</span>
-                    </div>
-                    <p class="text-xs text-theme-secondary mt-2">DEMAND: ${b.demandKWh || 20} kW | TYPE: ${b.type || 'ZONE'}</p>
-                </div>
-            `;
-        });
+                telemetryChart.options.scales.x.grid.color = gridColor;
+                telemetryChart.options.scales.y.grid.color = gridColor;
+                telemetryChart.options.scales.x.ticks.color = tickColor;
+                telemetryChart.options.scales.y.ticks.color = tickColor;
+                telemetryChart.data.datasets[0].borderColor = lineColor;
+                telemetryChart.data.datasets[0].pointBackgroundColor = lineColor;
+                telemetryChart.update();
+            }
+        };
 
-        switchTab('telemetry');
-    }
+        window.switchTab = function (tabId) {
+            document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+            const targetTab = document.getElementById("tab-" + tabId);
+            if (targetTab) targetTab.classList.remove("hidden");
 
-    function appendLog(type, text) {
-        const logConsole = document.getElementById('logConsole');
-        const time = new Date().toTimeString().split(' ')[0];
-        let colorClass = "text-theme-muted";
-        if(type === "SUCCESS") colorClass = "text-theme-accent font-bold";
-        if(type === "ERROR") colorClass = "text-red-500 font-bold";
+            document.querySelectorAll(".tab-btn").forEach(btn => {
+                btn.classList.remove("bg-amber-500", "text-black", "shadow");
+                btn.classList.add("text-theme-muted", "hover:opacity-80");
+            });
 
-        logConsole.innerHTML += `<div class="p-2 reanimation-inset border ${colorClass}">
-            <span>[${time}] [${type}]</span> ${text}
-        </div>`;
-        logConsole.scrollTop = logConsole.scrollHeight;
-    }
+            const activeBtn = document.getElementById("btn-" + tabId);
+            if (activeBtn) {
+                activeBtn.classList.add("bg-amber-500", "text-black", "shadow");
+                activeBtn.classList.remove("text-theme-muted", "hover:opacity-80");
+            }
 
-    function toggleTheme() {
-        isLightMode = !isLightMode;
-        document.body.classList.toggle('light-mode', isLightMode);
-        document.getElementById('themeToggleBtn').innerText = isLightMode ? '[DARK_MODE]' : '[LIGHT_MODE]';
-
-        const gridColor = isLightMode ? 'rgba(92, 102, 71, 0.25)' : 'rgba(74, 84, 56, 0.4)';
-        const tickColor = isLightMode ? '#525c40' : '#7a8563';
-        const lineColor = isLightMode ? '#d97706' : '#f59e0b';
-
-        telemetryChart.options.scales.x.grid.color = gridColor;
-        telemetryChart.options.scales.y.grid.color = gridColor;
-        telemetryChart.options.scales.x.ticks.color = tickColor;
-        telemetryChart.options.scales.y.ticks.color = tickColor;
-        telemetryChart.data.datasets[0].borderColor = lineColor;
-        telemetryChart.data.datasets[0].pointBackgroundColor = lineColor;
-        telemetryChart.update();
-    }
-
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById('tab-' + tabId).classList.remove('hidden');
-
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('bg-amber-500', 'text-black', 'shadow');
-            btn.classList.add('text-theme-muted', 'hover:opacity-80');
-        });
-
-        const activeBtn = document.getElementById('btn-' + tabId);
-        activeBtn.classList.add('bg-amber-500', 'text-black', 'shadow');
-        activeBtn.classList.remove('text-theme-muted', 'hover:opacity-80');
-
-        if(tabId === 'telemetry' && window.telemetryChart) {
-            window.telemetryChart.resize();
-        }
-    }
-
-    const ctx = document.getElementById('telemetryChart').getContext('2d');
-    const telemetryChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['12:00', '12:05', '12:10', '12:15', '12:20'],
-            datasets: [{
-                label: 'Grid Load (kW)',
-                data: [72.1, 76.5, 74.2, 82.8, 78.4],
-                borderColor: '#f59e0b',
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.1,
-                pointRadius: 5,
-                pointBackgroundColor: '#f59e0b',
-                pointBorderColor: '#000000'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: { grid: { color: 'rgba(74, 84, 56, 0.4)' }, ticks: { color: '#7a8563', font: { family: 'monospace', size: 10 } } },
-                y: { min: 0, max: 150, grid: { color: 'rgba(74, 84, 56, 0.4)' }, ticks: { color: '#7a8563', font: { family: 'monospace', size: 10 } } }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-    window.telemetryChart = telemetryChart;
+            if (tabId === "telemetry" && window.telemetryChart) {
+                window.telemetryChart.resize();
+            }
+        };
+    })();
 </script>
 </body>
 </html>
