@@ -8,7 +8,8 @@ public record SimulationRequest(
         double initialBatterySocKwh,
         Set<BuildingType> criticalBuildings,
         List<ScenarioCondition> scenarioConditions,
-        SmartStrategyConfig smartStrategyConfig
+        SmartStrategyConfig smartStrategyConfig,
+        CustomStrategyConfig customStrategyConfig
 ) {
 
     public SimulationRequest {
@@ -44,10 +45,33 @@ public record SimulationRequest(
             );
         }
 
+        if (customStrategyConfig == null) {
+            throw new IllegalArgumentException(
+                    "Custom strategy config cannot be null."
+            );
+        }
+
         criticalBuildings =
                 Set.copyOf(criticalBuildings);
 
         scenarioConditions =
                 List.copyOf(scenarioConditions);
+    }
+
+    public SimulationRequest(
+            double batteryCapacityKwh,
+            double initialBatterySocKwh,
+            Set<BuildingType> criticalBuildings,
+            List<ScenarioCondition> scenarioConditions,
+            SmartStrategyConfig smartStrategyConfig
+    ) {
+        this(
+                batteryCapacityKwh,
+                initialBatterySocKwh,
+                criticalBuildings,
+                scenarioConditions,
+                smartStrategyConfig,
+                CustomStrategyConfig.defaultConfig()
+        );
     }
 }

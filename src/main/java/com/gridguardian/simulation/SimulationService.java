@@ -57,7 +57,8 @@ public class SimulationService {
                 request.scenarioConditions(),
                 request.batteryCapacityKwh(),
                 request.initialBatterySocKwh(),
-                request.smartStrategyConfig()
+                request.smartStrategyConfig(),
+                request.customStrategyConfig()
         );
     }
 }

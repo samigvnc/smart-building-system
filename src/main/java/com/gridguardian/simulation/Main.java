@@ -44,7 +44,11 @@ public class Main {
         printSummary(
                 comparison.smart().summary()
         );
+        System.out.println();
 
+        printSummary(
+                comparison.custom().summary()
+        );
         System.out.println();
 
         printHourlyComparison(

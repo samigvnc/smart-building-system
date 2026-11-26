@@ -8,8 +8,11 @@ public class StrategyComparisonService {
     private final SimulationMetricsCalculator metricsCalculator;
 
     public StrategyComparisonService() {
-        this.simulationEngine = new SimulationEngine();
-        this.metricsCalculator = new SimulationMetricsCalculator();
+        this.simulationEngine =
+                new SimulationEngine();
+
+        this.metricsCalculator =
+                new SimulationMetricsCalculator();
     }
 
     public StrategyComparisonResult compare(
@@ -23,7 +26,8 @@ public class StrategyComparisonService {
                 conditions,
                 batteryCapacityKwh,
                 initialBatterySocKwh,
-                SmartStrategyConfig.defaultConfig()
+                SmartStrategyConfig.defaultConfig(),
+                CustomStrategyConfig.defaultConfig()
         );
     }
 
@@ -33,6 +37,24 @@ public class StrategyComparisonService {
             double batteryCapacityKwh,
             double initialBatterySocKwh,
             SmartStrategyConfig smartStrategyConfig
+    ) {
+        return compare(
+                inputs,
+                conditions,
+                batteryCapacityKwh,
+                initialBatterySocKwh,
+                smartStrategyConfig,
+                CustomStrategyConfig.defaultConfig()
+        );
+    }
+
+    public StrategyComparisonResult compare(
+            List<HourlyInput> inputs,
+            List<ScenarioCondition> conditions,
+            double batteryCapacityKwh,
+            double initialBatterySocKwh,
+            SmartStrategyConfig smartStrategyConfig,
+            CustomStrategyConfig customStrategyConfig
     ) {
 
         Battery basicBattery =
@@ -47,12 +69,23 @@ public class StrategyComparisonService {
                         initialBatterySocKwh
                 );
 
+        Battery customBattery =
+                new Battery(
+                        batteryCapacityKwh,
+                        initialBatterySocKwh
+                );
+
         BasicStrategy basicStrategy =
                 new BasicStrategy();
 
         SmartStrategy smartStrategy =
                 new SmartStrategy(
                         smartStrategyConfig
+                );
+
+        CustomStrategy customStrategy =
+                new CustomStrategy(
+                        customStrategyConfig
                 );
 
         List<HourlyResult> basicResults =
@@ -71,6 +104,14 @@ public class StrategyComparisonService {
                         conditions
                 );
 
+        List<HourlyResult> customResults =
+                simulationEngine.run(
+                        inputs,
+                        customBattery,
+                        customStrategy,
+                        conditions
+                );
+
         SimulationSummary basicSummary =
                 metricsCalculator.calculate(
                         "Basic Strategy",
@@ -83,6 +124,12 @@ public class StrategyComparisonService {
                         smartResults
                 );
 
+        SimulationSummary customSummary =
+                metricsCalculator.calculate(
+                        "Custom Strategy",
+                        customResults
+                );
+
         return new StrategyComparisonResult(
                 new StrategySimulationResult(
                         basicSummary,
@@ -91,6 +138,10 @@ public class StrategyComparisonService {
                 new StrategySimulationResult(
                         smartSummary,
                         smartResults
+                ),
+                new StrategySimulationResult(
+                        customSummary,
+                        customResults
                 )
         );
     }
